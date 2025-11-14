@@ -1,0 +1,127 @@
+# Doot App GraphQL Schema
+# AWS AppSync Schema Definition
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+# Query operations
+type Query {
+  # Get current authenticated user
+  me: User
+
+  # Get user by ID
+  getUser(userId: ID!): User
+
+  # Get discovery profiles for the current user
+  discoverProfiles(limit: Int, filters: DiscoveryFilters): [User!]!
+
+  # Get all matches for the current user
+  getMatches: [Match!]!
+
+  # Get messages for a specific match
+  getMessages(matchId: ID!, limit: Int, nextToken: String): MessageConnection!
+}
+
+# Mutation operations
+type Mutation {
+  # Create or update user profile
+  updateProfile(input: UpdateProfileInput!): User!
+
+  # Like a user (potential match)
+  likeUser(userId: ID!): LikeResult!
+
+  # Pass on a user
+  passUser(userId: ID!): Boolean!
+
+  # Send a message in a match
+  sendMessage(input: SendMessageInput!): Message!
+
+  # Mark a message as read
+  markMessageRead(messageId: ID!): Message!
+
+  # Unmatch with a user
+  unmatch(matchId: ID!): Boolean!
+}
+
+# Subscription operations
+type Subscription {
+  # Subscribe to new messages in a match
+  onMessageReceived(matchId: ID!): Message
+    @aws_subscribe(mutations: ["sendMessage"])
+
+  # Subscribe to new matches for the current user
+  onNewMatch(userId: ID!): Match
+    @aws_subscribe(mutations: ["likeUser"])
+}
+
+# User type
+type User {
+  id: ID!
+  displayName: String!
+  age: Int!
+  gender: String
+  bio: String
+  photos: [String!]!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+# Match type
+type Match {
+  id: ID!
+  userId1: ID!
+  userId2: ID!
+  user1: User!
+  user2: User!
+  matchedAt: AWSDateTime!
+  isActive: Boolean!
+  lastMessageAt: AWSDateTime
+}
+
+# Message type
+type Message {
+  id: ID!
+  matchId: ID!
+  senderId: ID!
+  receiverId: ID!
+  content: String!
+  sentAt: AWSDateTime!
+  isRead: Boolean!
+}
+
+# Message connection for pagination
+type MessageConnection {
+  items: [Message!]!
+  nextToken: String
+}
+
+# Like result (indicates if it's a match)
+type LikeResult {
+  isMatch: Boolean!
+  match: Match
+}
+
+# Input types
+input UpdateProfileInput {
+  displayName: String
+  age: Int
+  gender: String
+  bio: String
+  photos: [String!]
+}
+
+input SendMessageInput {
+  matchId: ID!
+  receiverId: ID!
+  content: String!
+}
+
+input DiscoveryFilters {
+  minAge: Int
+  maxAge: Int
+  gender: String
+  maxDistance: Int
+}

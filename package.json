@@ -1,0 +1,35 @@
+{
+  "name": "doot-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Doot - A modern dating app monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:mobile": "npm run start --workspace=apps/mobile",
+    "dev:backend": "npm run dev --workspace=packages/backend",
+    "build": "npm run build --workspaces --if-present",
+    "build:shared": "npm run build --workspace=packages/shared",
+    "build:backend": "npm run build:shared && npm run build --workspace=packages/backend",
+    "build:all": "npm run build:shared && npm run build:backend",
+    "type-check": "tsc --noEmit",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "ts-node": "^10.9.2"
+  },
+  "keywords": [
+    "dating-app",
+    "monorepo",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

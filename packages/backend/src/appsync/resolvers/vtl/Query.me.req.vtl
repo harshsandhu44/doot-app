@@ -1,0 +1,11 @@
+## Query.me Request Mapping Template
+## Gets the current authenticated user from DynamoDB
+## Uses VTL for simple, direct DynamoDB access
+
+{
+  "version": "2017-02-28",
+  "operation": "GetItem",
+  "key": {
+    "id": $util.dynamodb.toDynamoDBJson($ctx.identity.sub)
+  }
+}

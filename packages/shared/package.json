@@ -1,0 +1,13 @@
+{
+  "name": "@doot-app/shared",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Shared TypeScript types and utilities for Doot app",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "echo 'Shared lint - to be configured'",
+    "test": "echo 'Shared test - to be configured'"
+  }
+}

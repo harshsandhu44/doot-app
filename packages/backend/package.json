@@ -1,0 +1,27 @@
+{
+  "name": "@doot-app/backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Doot backend - AWS AppSync and infrastructure",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "diff": "cdk diff",
+    "destroy": "cdk destroy",
+    "lint": "echo 'Backend lint - to be configured'",
+    "test": "echo 'Backend test - to be configured'"
+  },
+  "dependencies": {
+    "@doot-app/shared": "*",
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@aws-appsync/utils": "^1.1.0",
+    "@types/node": "^20.0.0",
+    "aws-cdk": "^2.100.0",
+    "typescript": "^5.7.2"
+  }
+}
