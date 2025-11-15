@@ -9,10 +9,12 @@ This is a Turborepo monorepo for the doot-app project. Currently contains a sing
 ## Architecture
 
 **Monorepo Structure:**
+
 - `apps/mobile` - Expo React Native mobile application (currently the only app)
 - `packages/*` - Shared packages directory (currently empty, ready for future shared code)
 
 **Key Technologies:**
+
 - Turborepo for monorepo orchestration and task running
 - Expo SDK ~54.0.23 for mobile development
 - React 19.1.0 / React Native 0.81.5
@@ -20,6 +22,7 @@ This is a Turborepo monorepo for the doot-app project. Currently contains a sing
 - npm workspaces for package management
 
 **Build System:**
+
 - Turborepo manages parallel task execution across workspace
 - Build tasks have dependency chains (`dependsOn: ["^build"]`)
 - Development tasks are marked as persistent and uncached
@@ -28,6 +31,7 @@ This is a Turborepo monorepo for the doot-app project. Currently contains a sing
 ## Common Commands
 
 **Development:**
+
 ```bash
 npm run dev                     # Run all apps in dev mode (uses turbo)
 npm run dev -- --filter=mobile  # Run only mobile app
@@ -38,12 +42,14 @@ cd apps/mobile && npm run dev:web      # Run in web browser
 ```
 
 **Building:**
+
 ```bash
 npm run build            # Build all apps and packages
 npm run build -- --filter=mobile  # Build specific app
 ```
 
 **Code Quality:**
+
 ```bash
 npm run lint             # Lint all packages
 npm run format           # Format code with Prettier
@@ -52,6 +58,7 @@ npm run check-types      # Type-check all TypeScript
 
 **Turbo Filters:**
 Use `--filter=<package-name>` to run commands on specific workspaces. Examples:
+
 - `npm run build -- --filter=mobile`
 - `npm run lint -- --filter=mobile`
 
@@ -64,6 +71,7 @@ Use `--filter=<package-name>` to run commands on specific workspaces. Examples:
 ## Mobile App Structure
 
 The mobile app (`apps/mobile`) is a minimal Expo application:
+
 - Entry point: `index.ts`
 - Main component: `App.tsx`
 - Configuration: `app.json` (Expo config)

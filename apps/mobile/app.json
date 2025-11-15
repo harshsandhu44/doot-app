@@ -2,11 +2,15 @@
   "expo": {
     "name": "Doot",
     "slug": "doot",
+    "scheme": "doot",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "experiments": {
+      "typedRoutes": true
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
