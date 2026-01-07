@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Animated, Dimensions } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Text, Surface, useTheme, ActivityIndicator } from "react-native-paper";
 import { useAuth } from "../../contexts/auth-context";
 import { ProfileCard } from "../../components/profile-card";
 import { fetchProfiles, recordSwipe } from "../../services/swipe";
 import { UserProfile } from "../../models/user";
 import * as Haptics from "expo-haptics";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function SwipeScreen() {
   const { user } = useAuth();
@@ -18,10 +16,10 @@ export default function SwipeScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [swipeAnimation] = useState(new Animated.Value(0));
 
   useEffect(() => {
     loadProfiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProfiles = async () => {
