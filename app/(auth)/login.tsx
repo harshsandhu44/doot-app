@@ -53,7 +53,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await signIn(email, password);
-      router.replace("/(tabs)");
+      // Navigation will be handled by RootLayoutNav based on onboarding status
     } catch (error: any) {
       setLocalError(error.message || "Failed to sign in");
     } finally {
@@ -66,7 +66,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await signInWithGoogle();
-      router.replace("/(tabs)");
+      // Navigation will be handled by RootLayoutNav based on onboarding status
     } catch (error: any) {
       setLocalError(error.message || "Failed to sign in with Google");
     } finally {

@@ -7,6 +7,8 @@
       "dependencies": {
         "@expo/vector-icons": "^15.0.3",
         "@react-native-async-storage/async-storage": "^2.2.0",
+        "@react-native-community/datetimepicker": "8.4.4",
+        "@react-native-community/slider": "^5.1.1",
         "@react-navigation/bottom-tabs": "^7.4.0",
         "@react-navigation/elements": "^2.6.3",
         "@react-navigation/native": "^7.1.8",
@@ -18,7 +20,9 @@
         "expo-font": "~14.0.10",
         "expo-haptics": "~15.0.8",
         "expo-image": "~3.0.11",
+        "expo-image-picker": "~17.0.10",
         "expo-linking": "~8.0.11",
+        "expo-location": "~19.0.8",
         "expo-router": "~6.0.21",
         "expo-splash-screen": "~31.0.13",
         "expo-status-bar": "~3.0.9",
@@ -519,6 +523,10 @@
 
     "@react-native-async-storage/async-storage": ["@react-native-async-storage/async-storage@2.2.0", "", { "dependencies": { "merge-options": "^3.0.4" }, "peerDependencies": { "react-native": "^0.0.0-0 || >=0.65 <1.0" } }, "sha512-gvRvjR5JAaUZF8tv2Kcq/Gbt3JHwbKFYfmb445rhOj6NUMx3qPLixmDx5pZAyb9at1bYvJ4/eTUipU5aki45xw=="],
 
+    "@react-native-community/datetimepicker": ["@react-native-community/datetimepicker@8.4.4", "", { "dependencies": { "invariant": "^2.2.4" }, "peerDependencies": { "expo": ">=52.0.0", "react": "*", "react-native": "*", "react-native-windows": "*" }, "optionalPeers": ["expo", "react-native-windows"] }, "sha512-bc4ZixEHxZC9/qf5gbdYvIJiLZ5CLmEsC3j+Yhe1D1KC/3QhaIfGDVdUcid0PdlSoGOSEq4VlB93AWyetEyBSQ=="],
+
+    "@react-native-community/slider": ["@react-native-community/slider@5.1.1", "", {}, "sha512-W98If/LnTaziU3/0h5+G1LvJaRhMc6iLQBte6UWa4WBIHDMaDPglNBIFKcCXc9Dxp83W+f+5Wv22Olq9M2HJYA=="],
+
     "@react-native/assets-registry": ["@react-native/assets-registry@0.81.5", "", {}, "sha512-705B6x/5Kxm1RKRvSv0ADYWm5JOnoiQ1ufW7h8uu2E6G9Of/eE6hP/Ivw3U5jI16ERqZxiKQwk34VJbB0niX9w=="],
 
     "@react-native/babel-plugin-codegen": ["@react-native/babel-plugin-codegen@0.81.5", "", { "dependencies": { "@babel/traverse": "^7.25.3", "@react-native/codegen": "0.81.5" } }, "sha512-oF71cIH6je3fSLi6VPjjC3Sgyyn57JLHXs+mHWc9MoCiJJcM4nqsS5J38zv1XQ8d3zOW2JtHro+LF0tagj2bfQ=="],
@@ -969,9 +977,15 @@
 
     "expo-image": ["expo-image@3.0.11", "", { "peerDependencies": { "expo": "*", "react": "*", "react-native": "*", "react-native-web": "*" }, "optionalPeers": ["react-native-web"] }, "sha512-4TudfUCLgYgENv+f48omnU8tjS2S0Pd9EaON5/s1ZUBRwZ7K8acEr4NfvLPSaeXvxW24iLAiyQ7sV7BXQH3RoA=="],
 
+    "expo-image-loader": ["expo-image-loader@6.0.0", "", { "peerDependencies": { "expo": "*" } }, "sha512-nKs/xnOGw6ACb4g26xceBD57FKLFkSwEUTDXEDF3Gtcu3MqF3ZIYd3YM+sSb1/z9AKV1dYT7rMSGVNgsveXLIQ=="],
+
+    "expo-image-picker": ["expo-image-picker@17.0.10", "", { "dependencies": { "expo-image-loader": "~6.0.0" }, "peerDependencies": { "expo": "*" } }, "sha512-a2xrowp2trmvXyUWgX3O6Q2rZaa2C59AqivKI7+bm+wLvMfTEbZgldLX4rEJJhM8xtmEDTNU+lzjtObwzBRGaw=="],
+
     "expo-keep-awake": ["expo-keep-awake@15.0.8", "", { "peerDependencies": { "expo": "*", "react": "*" } }, "sha512-YK9M1VrnoH1vLJiQzChZgzDvVimVoriibiDIFLbQMpjYBnvyfUeHJcin/Gx1a+XgupNXy92EQJLgI/9ZuXajYQ=="],
 
     "expo-linking": ["expo-linking@8.0.11", "", { "dependencies": { "expo-constants": "~18.0.12", "invariant": "^2.2.4" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-+VSaNL5om3kOp/SSKO5qe6cFgfSIWnnQDSbA7XLs3ECkYzXRquk5unxNS3pg7eK5kNUmQ4kgLI7MhTggAEUBLA=="],
+
+    "expo-location": ["expo-location@19.0.8", "", { "peerDependencies": { "expo": "*" } }, "sha512-H/FI75VuJ1coodJbbMu82pf+Zjess8X8Xkiv9Bv58ZgPKS/2ztjC1YO1/XMcGz7+s9DrbLuMIw22dFuP4HqneA=="],
 
     "expo-modules-autolinking": ["expo-modules-autolinking@3.0.24", "", { "dependencies": { "@expo/spawn-async": "^1.7.2", "chalk": "^4.1.0", "commander": "^7.2.0", "require-from-string": "^2.0.2", "resolve-from": "^5.0.0" }, "bin": { "expo-modules-autolinking": "bin/expo-modules-autolinking.js" } }, "sha512-TP+6HTwhL7orDvsz2VzauyQlXJcAWyU3ANsZ7JGL4DQu8XaZv/A41ZchbtAYLfozNA2Ya1Hzmhx65hXryBMjaQ=="],
 

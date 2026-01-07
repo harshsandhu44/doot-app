@@ -58,7 +58,7 @@ export default function SignupScreen() {
     setIsLoading(true);
     try {
       await signUp(email, password);
-      router.replace("/(auth)/onboarding");
+      // Navigation will be handled by RootLayoutNav based on onboarding status
     } catch (error: any) {
       setLocalError(error.message || "Failed to create account");
     } finally {
@@ -71,7 +71,7 @@ export default function SignupScreen() {
     setIsLoading(true);
     try {
       await signInWithGoogle();
-      router.replace("/(auth)/onboarding");
+      // Navigation will be handled by RootLayoutNav based on onboarding status
     } catch (error: any) {
       setLocalError(error.message || "Failed to sign in with Google");
     } finally {
