@@ -4,7 +4,8 @@ This is an [Expo](https://expo.dev) project with Firebase Authentication, protec
 
 ## Features
 
-- **Firebase Authentication**: Email/password authentication with session persistence
+- **Firebase Authentication**: Email/password and Google Sign-In with session persistence
+- **Google Sign-In**: One-tap Google authentication using Firebase
 - **Protected Routes**: Automatic redirects based on auth state
 - **Auth Screens**: Login, signup, and onboarding flows with form validation
 - **Tab Navigation**: Home and profile screens for authenticated users
@@ -43,6 +44,13 @@ EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id_here
 3. Go to Project Settings > General
 4. Scroll down to "Your apps"
 5. Copy the config values and add them to `.env.local`
+
+**Enable Google Sign-In:**
+1. In Firebase Console, go to Authentication > Sign-in method
+2. Click on "Google" provider
+3. Toggle "Enable" to ON
+4. Select a support email
+5. Click "Save"
 
 ### 3. Start the App
 
@@ -97,6 +105,13 @@ models/
 2. User enters credentials → Signs in with Firebase
 3. Redirected to home screen (tabs)
 
+### Google Sign-In Flow
+1. User taps "Continue with Google" button
+2. Google authentication popup/redirect appears
+3. User selects Google account
+4. Automatically signed in with Firebase
+5. Redirected to home screen (or onboarding if first time)
+
 ### Sign Out Flow
 1. User navigates to Profile tab
 2. User taps "Sign Out" button
@@ -110,6 +125,7 @@ All auth screens include comprehensive form validation:
 ### Login Screen (`app/screens/auth/login.tsx`)
 - Email format validation
 - Password required (min 6 characters)
+- Google Sign-In button
 - Error messages displayed inline
 - Loading states during authentication
 
@@ -117,6 +133,7 @@ All auth screens include comprehensive form validation:
 - Email format validation
 - Password strength (min 6 characters)
 - Password confirmation matching
+- Google Sign-In button
 - Error messages displayed inline
 - Loading states during account creation
 
@@ -138,6 +155,7 @@ interface AuthContextType {
   error: string | null;        // Auth error messages
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;  // Google Sign-In
   signOut: () => Promise<void>;
   clearError: () => void;      // Clear error messages
 }

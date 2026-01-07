@@ -1,13 +1,27 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   User as FirebaseUser,
-} from 'firebase/auth';
-import { auth } from '../config/firebase';
-import { User } from '../models/user';
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithCredential,
+} from "firebase/auth";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+import { auth } from "../config/firebase";
+import { User } from "../models/user";
+import { Platform } from "react-native";
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +29,7 @@ interface AuthContextType {
   error: string | null;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   clearError: () => void;
 }
@@ -24,7 +39,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
@@ -38,26 +53,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Configure Google Sign-In
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  });
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        const user: User = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          displayName: firebaseUser.displayName || undefined,
-          photoURL: firebaseUser.photoURL || undefined,
-          emailVerified: firebaseUser.emailVerified,
-          createdAt: firebaseUser.metadata.creationTime,
-        };
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (firebaseUser: FirebaseUser | null) => {
+        if (firebaseUser) {
+          const user: User = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || "",
+            displayName: firebaseUser.displayName || undefined,
+            photoURL: firebaseUser.photoURL || undefined,
+            emailVerified: firebaseUser.emailVerified,
+            createdAt: firebaseUser.metadata.creationTime,
+          };
+          setUser(user);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      },
+    );
 
     return unsubscribe;
   }, []);
+
+  // Handle Google Sign-In response
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential).catch((err) => {
+        console.error("Google Sign-In credential error:", err);
+        setError(err.message || "Failed to sign in with Google");
+      });
+    }
+  }, [response]);
 
   const signUp = async (email: string, password: string) => {
     try {
@@ -65,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (err: any) {
-      setError(err.message || 'Failed to create account');
+      setError(err.message || "Failed to create account");
       throw err;
     } finally {
       setLoading(false);
@@ -78,7 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
+      setError(err.message || "Failed to sign in");
       throw err;
     } finally {
       setLoading(false);
@@ -91,10 +126,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       await firebaseSignOut(auth);
     } catch (err: any) {
-      setError(err.message || 'Failed to sign out');
+      setError(err.message || "Failed to sign out");
       throw err;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      setError(null);
+      
+      // Use popup for web, Expo auth session for native
+      if (Platform.OS === "web") {
+        setLoading(true);
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        setLoading(false);
+      } else {
+        // Trigger Expo's Google auth flow for mobile
+        await promptAsync();
+      }
+    } catch (err: any) {
+      console.log("[GOOGLE SIGN_IN]: ", err.message);
+      setError(err.message || "Failed to sign in with Google");
+      setLoading(false);
+      throw err;
     }
   };
 
@@ -108,6 +165,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     error,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     clearError,
   };
