@@ -1,100 +1,132 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet } from "react-native";
+import {
+  Text,
+  Surface,
+  Button,
+  Card,
+  useTheme,
+  Dialog,
+  Portal,
+} from "react-native-paper";
 import { useAuth } from "../../contexts/auth-context";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const theme = useTheme();
+  const [visible, setVisible] = useState(false);
+
+  const showDialog = () => setVisible(true);
+  const hideDialog = () => setVisible(false);
 
   const handleSignOut = async () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await signOut();
-            router.replace("/screens/auth/login");
-          } catch (error) {
-            Alert.alert("Error", "Failed to sign out");
-          }
-        },
-      },
-    ]);
+    try {
+      await signOut();
+      hideDialog();
+      router.replace("/(auth)/login");
+    } catch {
+      hideDialog();
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <Surface
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <View style={styles.content}>
-        <Text style={styles.title}>Profile</Text>
+        <Text variant="displaySmall" style={styles.title}>
+          Profile
+        </Text>
 
-        <View style={styles.infoContainer}>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Email:</Text>
-            <Text style={styles.value}>{user?.email}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>User ID:</Text>
-            <Text style={styles.value}>{user?.uid}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Email Verified:</Text>
-            <Text style={styles.value}>{user?.emailVerified ? "Yes" : "No"}</Text>
-          </View>
-        </View>
+        <Card style={styles.card}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.infoRow}>
+              <Text
+                variant="labelMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                Email:
+              </Text>
+              <Text variant="bodyLarge">{user?.email}</Text>
+            </View>
 
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+            <View style={styles.infoRow}>
+              <Text
+                variant="labelMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                User ID:
+              </Text>
+              <Text variant="bodyMedium">{user?.uid}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text
+                variant="labelMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                Email Verified:
+              </Text>
+              <Text variant="bodyMedium">
+                {user?.emailVerified ? "Yes" : "No"}
+              </Text>
+            </View>
+          </Card.Content>
+        </Card>
+
+        <Button
+          mode="contained"
+          onPress={showDialog}
+          buttonColor={theme.colors.errorContainer}
+          textColor={theme.colors.onErrorContainer}
+          style={styles.signOutButton}
+        >
+          Sign Out
+        </Button>
       </View>
-    </View>
+
+      <Portal>
+        <Dialog visible={visible} onDismiss={hideDialog}>
+          <Dialog.Title>Sign Out</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">Are you sure you want to sign out?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog}>Cancel</Button>
+            <Button onPress={handleSignOut} textColor={theme.colors.error}>
+              Sign Out
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   content: {
     flex: 1,
     padding: 24,
   },
   title: {
-    fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 32,
-    color: "#000",
+    marginBottom: 24,
   },
-  infoContainer: {
+  card: {
+    marginBottom: 24,
+  },
+  cardContent: {
     gap: 16,
-    marginBottom: 32,
   },
   infoRow: {
     gap: 8,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
-  },
-  value: {
-    fontSize: 16,
-    color: "#000",
-  },
   signOutButton: {
-    backgroundColor: "#FF3B30",
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  signOutText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    marginTop: 16,
   },
 });
