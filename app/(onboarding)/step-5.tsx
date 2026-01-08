@@ -1,50 +1,24 @@
 import React, { useState } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
-import {
-  Text,
-  Button,
-  Surface,
-  TextInput,
-  Chip,
-  useTheme,
-} from "react-native-paper";
+import { View, StyleSheet, ScrollView, Platform, TextInput, TouchableOpacity } from "react-native";
+import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "../../contexts/onboarding-context";
+import { Button } from "../../components/button";
+import { InterestChip } from "../../components/interest-chip";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
 
 const INTEREST_OPTIONS = [
-  "Travel",
-  "Music",
-  "Movies",
-  "Sports",
-  "Fitness",
-  "Cooking",
-  "Reading",
-  "Gaming",
-  "Art",
-  "Photography",
-  "Hiking",
-  "Yoga",
-  "Dancing",
-  "Food",
-  "Coffee",
-  "Wine",
-  "Technology",
-  "Fashion",
-  "Pets",
-  "Netflix",
+  "Travel", "Music", "Movies", "Sports", "Fitness", "Cooking", "Reading", "Gaming", "Art",
+  "Photography", "Hiking", "Yoga", "Dancing", "Food", "Coffee", "Wine", "Technology",
+  "Fashion", "Pets", "Netflix"
 ];
 
 export default function Step5() {
   const router = useRouter();
-  const theme = useTheme();
   const { data, updateData } = useOnboarding();
 
-  const [bio, setBio] = useState(data.bio);
-  const [interests, setInterests] = useState<string[]>(data.interests);
+  const [bio, setBio] = useState(data.bio || "");
+  const [interests, setInterests] = useState<string[]>(data.interests || []);
   const [error, setError] = useState("");
 
   const toggleInterest = (interest: string) => {
@@ -61,197 +35,139 @@ export default function Step5() {
   };
 
   const validateAndNext = () => {
-    setError("");
+    if (!bio.trim() || bio.trim().length < 10) return setError("Bio must be at least 10 characters");
+    if (interests.length < 3) return setError("Please select at least 3 interests");
 
-    if (!bio.trim()) {
-      setError("Please write a bio");
-      return;
-    }
-
-    if (bio.trim().length < 20) {
-      setError("Bio must be at least 20 characters");
-      return;
-    }
-
-    if (bio.trim().length > 500) {
-      setError("Bio must be less than 500 characters");
-      return;
-    }
-
-    if (interests.length < 3) {
-      setError("Please select at least 3 interests");
-      return;
-    }
-
-    // Save data and navigate
     updateData({ bio, interests });
     router.push("/(onboarding)/step-6");
   };
 
-  const goBack = () => {
-    router.back();
-  };
-
   return (
-    <Surface style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text variant="headlineMedium" style={styles.title}>
-            About You
-          </Text>
-          <Text
-            variant="bodyLarge"
-            style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}
-          >
-            Tell us about yourself and your interests
-          </Text>
+        <Text style={styles.title}>Express yourself</Text>
+        <Text style={styles.subtitle}>Write a short bio and pick your interests</Text>
 
-          {error ? (
-            <Surface
-              style={[
-                styles.errorContainer,
-                { backgroundColor: theme.colors.errorContainer },
-              ]}
-            >
-              <Text style={{ color: theme.colors.onErrorContainer }}>
-                {error}
-              </Text>
-            </Surface>
-          ) : null}
+        <View style={styles.form}>
+          <Text style={styles.label}>Bio</Text>
+          <TextInput
+            placeholder="Tell people a bit about yourself..."
+            value={bio}
+            onChangeText={setBio}
+            style={styles.bioInput}
+            multiline
+            numberOfLines={4}
+            maxLength={500}
+            placeholderTextColor={COLORS.textSecondary}
+          />
+          <Text style={styles.charCount}>{bio.length}/500</Text>
 
-          <View style={styles.form}>
-            <View style={styles.section}>
-              <Text variant="titleMedium" style={styles.sectionTitle}>
-                Bio
-              </Text>
-              <TextInput
-                mode="outlined"
-                value={bio}
-                onChangeText={setBio}
-                placeholder="Tell people a bit about yourself..."
-                multiline
-                numberOfLines={6}
-                style={styles.bioInput}
-                maxLength={500}
-              />
-              <Text
-                variant="bodySmall"
-                style={[styles.charCount, { color: theme.colors.onSurfaceVariant }]}
-              >
-                {bio.length}/500 characters
-              </Text>
-            </View>
-
-            <View style={styles.section}>
-              <View style={styles.interestsHeader}>
-                <Text variant="titleMedium">Interests</Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  {interests.length}/10 selected (min 3)
-                </Text>
-              </View>
-              
-              <View style={styles.interestsContainer}>
-                {INTEREST_OPTIONS.map((interest) => (
-                  <Chip
-                    key={interest}
-                    selected={interests.includes(interest)}
-                    onPress={() => toggleInterest(interest)}
-                    style={styles.chip}
-                    mode="outlined"
-                  >
-                    {interest}
-                  </Chip>
-                ))}
-              </View>
-            </View>
+          <View style={styles.interestsHeader}>
+            <Text style={styles.label}>Interests</Text>
+            <Text style={styles.interestsCount}>{interests.length}/10</Text>
           </View>
-
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="outlined"
-              onPress={goBack}
-              style={styles.backButton}
-            >
-              Back
-            </Button>
-            <Button
-              mode="contained"
-              onPress={validateAndNext}
-              style={styles.nextButton}
-              disabled={!bio.trim() || interests.length < 3}
-            >
-              Next
-            </Button>
+          
+          <View style={styles.interestsGrid}>
+            {INTEREST_OPTIONS.map((interest) => (
+              <TouchableOpacity key={interest} onPress={() => toggleInterest(interest)}>
+                <InterestChip
+                  label={interest}
+                  selected={interests.includes(interest)}
+                  style={styles.chip}
+                />
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>
-    </Surface>
+
+      <View style={styles.footer}>
+        <Button
+          title="Continue"
+          onPress={validateAndNext}
+          disabled={!bio.trim() || interests.length < 3}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
+    padding: SPACING.lg,
+    paddingBottom: 100,
   },
   title: {
-    marginBottom: 8,
-    marginTop: 16,
+    ...TYPOGRAPHY.title,
+    fontSize: 28,
   },
   subtitle: {
-    marginBottom: 32,
-  },
-  errorContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xl,
   },
   form: {
-    gap: 32,
+    gap: SPACING.md,
   },
-  section: {
-    gap: 12,
-  },
-  sectionTitle: {
-    fontWeight: "600",
+  label: {
+    ...TYPOGRAPHY.heading,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   bioInput: {
     minHeight: 120,
-    textAlignVertical: "top",
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.medium,
+    padding: SPACING.md,
+    ...TYPOGRAPHY.body,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    textAlignVertical: 'top',
   },
   charCount: {
-    textAlign: "right",
-    marginTop: -8,
+    ...TYPOGRAPHY.small,
+    color: COLORS.textSecondary,
+    textAlign: 'right',
+    marginTop: -SPACING.sm,
   },
   interestsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.sm,
   },
-  interestsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+  interestsCount: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.textSecondary,
+  },
+  interestsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
   },
   chip: {
-    marginBottom: 4,
+    marginRight: 0,
+    marginBottom: 0,
   },
-  buttonContainer: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 24,
-    paddingBottom: 24,
+  errorText: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.error,
+    textAlign: 'center',
+    marginTop: SPACING.md,
   },
-  backButton: {
-    flex: 1,
-  },
-  nextButton: {
-    flex: 2,
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: SPACING.lg,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    backgroundColor: COLORS.background,
   },
 });

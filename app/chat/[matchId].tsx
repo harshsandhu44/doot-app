@@ -6,17 +6,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import {
-  Surface,
-  useTheme,
-  ActivityIndicator,
-  Text,
-  TextInput,
-  IconButton,
-  Avatar,
-} from "react-native-paper";
+import { ActivityIndicator, Text } from "react-native-paper";
+import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/auth-context";
 import { ChatBubble } from "../../components/chat-bubble";
 import {
@@ -27,10 +22,10 @@ import {
 } from "../../services/messages";
 import { getMatchById } from "../../services/matches";
 import { UserProfile } from "../../models/user";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
 
 export default function ChatScreen() {
   const { user } = useAuth();
-  const theme = useTheme();
   const router = useRouter();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,50 +38,34 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!matchId || !user?.uid) return;
 
+    const loadMatchData = async () => {
+      try {
+        setLoading(true);
+        const match = await getMatchById(matchId, user.uid!);
+        if (match?.otherUser) {
+          setOtherUser(match.otherUser);
+        }
+      } catch (err) {
+        console.error("Error loading match data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadMatchData();
 
-    // Subscribe to real-time messages
     const unsubscribe = subscribeToMessages(matchId, (newMessages) => {
       setMessages(newMessages);
-      // Mark messages as read
-      markMessagesAsRead(matchId, user.uid);
+      markMessagesAsRead(matchId, user.uid!);
     });
 
     return () => unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId, user?.uid]);
-
-  useEffect(() => {
-    // Scroll to bottom when new messages arrive
-    if (messages.length > 0 && flatListRef.current) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages]);
-
-  const loadMatchData = async () => {
-    if (!matchId || !user?.uid) return;
-
-    try {
-      setLoading(true);
-      const match = await getMatchById(matchId, user.uid);
-      if (match?.otherUser) {
-        setOtherUser(match.otherUser);
-      }
-    } catch (err) {
-      console.error("Error loading match data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSend = async () => {
     if (!messageText.trim() || !user?.uid || !matchId || !otherUser) return;
-
     const textToSend = messageText.trim();
     setMessageText("");
-
     try {
       setSending(true);
       await sendMessage(matchId, user.uid, otherUser.uid, textToSend);
@@ -101,203 +80,201 @@ export default function ChatScreen() {
   const formatTimestamp = (timestamp: any): string => {
     if (!timestamp) return "";
     const date = timestamp.toDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const formattedHours = hours % 12 || 12;
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    return `${formattedHours}:${formattedMinutes} ${ampm}`;
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleProfilePress = () => {
-    if (otherUser) {
-      router.push(`/profile/${otherUser.uid}` as any);
-    }
+  const renderDateSeparator = (date: Date) => {
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+
+    let label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    if (isToday) label = "Today";
+    if (isYesterday) label = "Yesterday";
+
+    return (
+      <View style={styles.dateSeparator}>
+        <Text style={styles.dateSeparatorText}>{label}</Text>
+      </View>
+    );
   };
 
   if (loading) {
     return (
-      <Surface
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" />
-        </View>
-      </Surface>
+      <View style={styles.centerContent}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
     );
   }
 
-  if (!otherUser) {
-    return (
-      <Surface
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.centerContent}>
-          <Text variant="headlineSmall">Match not found</Text>
-        </View>
-      </Surface>
-    );
-  }
+  if (!otherUser) return null;
 
   return (
-    <>
+    <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: otherUser.profile.name,
+          headerTitle: () => (
+            <View style={styles.headerTitleContainer}>
+              <TouchableOpacity 
+                style={styles.headerProfile}
+                onPress={() => router.push(`/profile/${otherUser.uid}` as any)}
+              >
+                <Image
+                  source={{ uri: otherUser.profile.photos?.[0] || 'https://via.placeholder.com/150' }}
+                  style={styles.headerAvatar}
+                />
+                <Text style={styles.headerName}>{otherUser.profile.name}</Text>
+              </TouchableOpacity>
+            </View>
+          ),
           headerRight: () => (
-            <TouchableOpacity onPress={handleProfilePress}>
-              {otherUser.profile.photos &&
-              otherUser.profile.photos.length > 0 ? (
-                <Avatar.Image
-                  size={36}
-                  source={{ uri: otherUser.profile.photos[0] }}
-                />
-              ) : (
-                <Avatar.Icon
-                  size={36}
-                  icon="account"
-                  style={{
-                    backgroundColor: theme.colors.surfaceVariant,
-                  }}
-                />
-              )}
+            <TouchableOpacity style={styles.headerMenu}>
+              <Ionicons name="ellipsis-vertical" size={24} color={COLORS.text} />
             </TouchableOpacity>
           ),
         }}
       />
-      <Surface
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
+
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-        >
-          {messages.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text
-                variant="headlineSmall"
-                style={{ textAlign: "center", marginBottom: 16 }}
-              >
-                Say hi to {otherUser.profile.name}!
-              </Text>
-              <Text
-                variant="bodyLarge"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                  textAlign: "center",
-                }}
-              >
-                Start the conversation
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => {
+            const showDateSeparator = index === 0 || 
+              (messages[index-1].timestamp?.toDate().toDateString() !== item.timestamp?.toDate().toDateString());
+            
+            return (
+              <View>
+                {showDateSeparator && item.timestamp && renderDateSeparator(item.timestamp.toDate())}
                 <ChatBubble
                   message={item.text}
                   timestamp={formatTimestamp(item.timestamp)}
                   isSent={item.senderId === user?.uid}
                   isRead={item.read}
                 />
-              )}
-              contentContainerStyle={styles.messagesList}
-              onContentSizeChange={() =>
-                flatListRef.current?.scrollToEnd({ animated: true })
-              }
-            />
-          )}
+              </View>
+            );
+          }}
+          contentContainerStyle={styles.messagesList}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        />
 
-          <View
+        <View style={styles.inputBar}>
+          <TouchableOpacity style={styles.plusButton}>
+            <Ionicons name="add" size={28} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+          
+          <TextInput
+            placeholder="Type a message..."
+            value={messageText}
+            onChangeText={setMessageText}
+            style={styles.input}
+            multiline
+            placeholderTextColor={COLORS.textSecondary}
+          />
+
+          <TouchableOpacity 
+            onPress={handleSend}
+            disabled={!messageText.trim() || sending}
             style={[
-              styles.inputContainer,
-              {
-                backgroundColor: theme.colors.surface,
-                borderTopColor: theme.colors.outlineVariant,
-              },
+              styles.sendButton,
+              { backgroundColor: messageText.trim() ? COLORS.primary : COLORS.border }
             ]}
           >
-            <View style={styles.inputWrapper}>
-              <TextInput
-                mode="outlined"
-                placeholder="Message..."
-                value={messageText}
-                onChangeText={setMessageText}
-                style={styles.input}
-                multiline
-                maxLength={500}
-                onSubmitEditing={handleSend}
-                disabled={sending}
-                outlineStyle={styles.inputOutline}
-              />
-              <IconButton
-                icon="send"
-                size={24}
-                mode="contained"
-                containerColor={
-                  messageText.trim() && !sending
-                    ? theme.colors.primary
-                    : theme.colors.surfaceVariant
-                }
-                iconColor={
-                  messageText.trim() && !sending
-                    ? theme.colors.onPrimary
-                    : theme.colors.onSurfaceVariant
-                }
-                onPress={handleSend}
-                disabled={!messageText.trim() || sending}
-                style={styles.sendButton}
-              />
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Surface>
-    </>
+            <Ionicons 
+              name="send" 
+              size={20} 
+              color={messageText.trim() ? COLORS.white : COLORS.textSecondary} 
+            />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   centerContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    backgroundColor: COLORS.background,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerProfile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  headerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  headerName: {
+    ...TYPOGRAPHY.heading,
+    fontSize: 16,
+  },
+  headerMenu: {
+    marginRight: SPACING.sm,
   },
   messagesList: {
-    paddingVertical: 12,
-    paddingHorizontal: 4,
+    paddingVertical: SPACING.md,
   },
-  inputContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  dateSeparator: {
+    alignItems: 'center',
+    marginVertical: SPACING.md,
+  },
+  dateSeparatorText: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.textSecondary,
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: BORDER_RADIUS.small,
+  },
+  inputBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    gap: SPACING.sm,
   },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  plusButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     flex: 1,
+    ...TYPOGRAPHY.body,
     maxHeight: 100,
-    backgroundColor: "transparent",
-  },
-  inputOutline: {
-    borderRadius: 24,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
   },
   sendButton: {
-    margin: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

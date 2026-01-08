@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useColorScheme } from "react-native";
 import { PaperProvider } from "react-native-paper";
 import { AuthProvider, useAuth } from "../contexts/auth-context";
-import { lightTheme, darkTheme } from "../config/theme";
+import { paperLightTheme, paperDarkTheme } from "../constants/theme";
 import { getUserProfile } from "../services/firestore";
 
 function RootLayoutNav() {
@@ -103,7 +103,7 @@ export default function RootLayout() {
     setIsDarkMode(colorScheme === "dark");
   }, [colorScheme]);
 
-  const theme = isDarkMode ? darkTheme : lightTheme;
+  const theme = isDarkMode ? paperDarkTheme : paperLightTheme;
 
   return (
     <PaperProvider theme={theme}>

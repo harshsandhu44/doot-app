@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
-import { Text, Button, Surface, TextInput, useTheme } from "react-native-paper";
+import { View, StyleSheet, ScrollView, Platform, TextInput, Alert } from "react-native";
+import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "../../contexts/onboarding-context";
 import { useAuth } from "../../contexts/auth-context";
 import { saveUserProfile } from "../../services/firestore";
+import { Button } from "../../components/button";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function Step6() {
   const router = useRouter();
-  const theme = useTheme();
   const { data, resetData } = useOnboarding();
   const { user } = useAuth();
 
@@ -21,22 +23,9 @@ export default function Step6() {
   const completeOnboarding = async (skipOptional: boolean = false) => {
     setLoading(true);
     setError("");
-
     try {
-      // Validate height if provided
-      const heightValue = skipOptional
-        ? undefined
-        : height
-          ? parseInt(height, 10)
-          : undefined;
-
-      if (height && (!heightValue || heightValue < 100 || heightValue > 250)) {
-        setError("Please enter a valid height between 100-250 cm");
-        setLoading(false);
-        return;
-      }
-
-      // Update final data
+      const heightValue = skipOptional ? undefined : height ? parseInt(height, 10) : undefined;
+      
       const finalData = {
         ...data,
         height: heightValue,
@@ -44,22 +33,12 @@ export default function Step6() {
         occupation: skipOptional ? undefined : occupation || undefined,
       };
 
-      // Save to Firestore
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
+      if (!user) throw new Error("User not authenticated");
 
       await saveUserProfile(user.uid, user.email, finalData);
-
-      // Reset onboarding data
       resetData();
-
-      // Navigate to main app
       router.replace("/(tabs)");
-
-      Alert.alert("Welcome!", "Your profile has been created successfully", [
-        { text: "OK" },
-      ]);
+      Alert.alert("Welcome!", "Your profile has been created successfully");
     } catch (err: any) {
       console.error("Error completing onboarding:", err);
       setError(err.message || "Failed to save profile. Please try again.");
@@ -68,171 +47,134 @@ export default function Step6() {
     }
   };
 
-  const handleComplete = () => {
-    completeOnboarding(false);
-  };
-
-  const handleSkip = () => {
-    completeOnboarding(true);
-  };
-
-  const goBack = () => {
-    router.back();
-  };
-
   return (
-    <Surface
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text variant="headlineMedium" style={styles.title}>
-            Optional Details
-          </Text>
-          <Text
-            variant="bodyLarge"
-            style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}
-          >
-            Add more details to your profile (you can skip this step)
-          </Text>
+        <Text style={styles.title}>Almost there!</Text>
+        <Text style={styles.subtitle}>These details are optional, but help people get to know you better</Text>
 
-          {error ? (
-            <Surface
-              style={[
-                styles.errorContainer,
-                { backgroundColor: theme.colors.errorContainer },
-              ]}
-            >
-              <Text style={{ color: theme.colors.onErrorContainer }}>
-                {error}
-              </Text>
-            </Surface>
-          ) : null}
-
-          <View style={styles.form}>
+        <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Height (cm)</Text>
             <TextInput
-              mode="outlined"
-              label="Height (cm)"
+              placeholder="e.g., 175"
               value={height}
               onChangeText={setHeight}
-              placeholder="e.g., 175"
               keyboardType="numeric"
               style={styles.input}
-              disabled={loading}
+              placeholderTextColor={COLORS.textSecondary}
             />
+          </View>
 
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Education</Text>
             <TextInput
-              mode="outlined"
-              label="Education"
+              placeholder="e.g., Bachelor's Degree"
               value={education}
               onChangeText={setEducation}
-              placeholder="e.g., Bachelor's Degree"
               style={styles.input}
-              disabled={loading}
+              placeholderTextColor={COLORS.textSecondary}
             />
+          </View>
 
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Occupation</Text>
             <TextInput
-              mode="outlined"
-              label="Occupation"
+              placeholder="e.g., Designer"
               value={occupation}
               onChangeText={setOccupation}
-              placeholder="e.g., Software Engineer"
               style={styles.input}
-              disabled={loading}
+              placeholderTextColor={COLORS.textSecondary}
             />
           </View>
-
-          <Text
-            variant="bodySmall"
-            style={[
-              styles.helperText,
-              { color: theme.colors.onSurfaceVariant },
-            ]}
-          >
-            These details are optional and can be added later from your profile
-            settings
-          </Text>
-
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="outlined"
-              onPress={goBack}
-              style={styles.backButton}
-              disabled={loading}
-            >
-              Back
-            </Button>
-            <Button
-              mode="outlined"
-              onPress={handleSkip}
-              style={styles.skipButton}
-              disabled={loading}
-            >
-              Skip
-            </Button>
-            <Button
-              mode="contained"
-              onPress={handleComplete}
-              style={styles.completeButton}
-              loading={loading}
-              disabled={loading}
-            >
-              Complete
-            </Button>
-          </View>
         </View>
+
+        <View style={styles.tipContainer}>
+          <Ionicons name="sparkles-outline" size={20} color={COLORS.primary} />
+          <Text style={styles.tipText}>
+            Profiles with more info are 50% more likely to get a match!
+          </Text>
+        </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>
-    </Surface>
+
+      <View style={styles.footer}>
+        <Button
+          title="Complete Profile"
+          onPress={() => completeOnboarding(false)}
+          loading={loading}
+          disabled={loading}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
+    padding: SPACING.lg,
+    paddingBottom: 100,
   },
   title: {
-    marginBottom: 8,
-    marginTop: 16,
+    ...TYPOGRAPHY.title,
+    fontSize: 28,
   },
   subtitle: {
-    marginBottom: 32,
-  },
-  errorContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xl,
   },
   form: {
-    gap: 16,
-    marginBottom: 24,
+    gap: SPACING.lg,
+  },
+  inputGroup: {
+    gap: SPACING.xs,
+  },
+  label: {
+    ...TYPOGRAPHY.heading,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   input: {
-    marginBottom: 8,
+    height: 56,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: BORDER_RADIUS.medium,
+    paddingHorizontal: SPACING.md,
+    ...TYPOGRAPHY.body,
+    backgroundColor: COLORS.surface,
   },
-  helperText: {
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 20,
+  tipContainer: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.medium,
+    marginTop: SPACING.xl,
+    gap: SPACING.sm,
+    alignItems: 'center',
   },
-  buttonContainer: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: "auto",
-  },
-  backButton: {
+  tipText: {
+    ...TYPOGRAPHY.caption,
     flex: 1,
   },
-  skipButton: {
-    flex: 1,
+  errorText: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.error,
+    textAlign: 'center',
+    marginTop: SPACING.md,
   },
-  completeButton: {
-    flex: 2,
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: SPACING.lg,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    backgroundColor: COLORS.background,
   },
 });

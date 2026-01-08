@@ -1,13 +1,17 @@
-import React from "react";
-import { TouchableOpacity, StyleSheet, View } from "react-native";
-import { List, Avatar, Badge, Text, useTheme } from "react-native-paper";
-import { UserProfile } from "../models/user";
+import React from 'react';
+import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { Image } from 'expo-image';
+import { UserProfile } from '../models/user';
+import { COLORS, SPACING, TYPOGRAPHY } from '../constants/theme';
+import { Badge } from './badge';
 
 interface MessagePreviewProps {
   user: UserProfile;
   lastMessage?: string;
   timestamp?: string;
   unreadCount?: number;
+  isSentByMe?: boolean;
   onPress: () => void;
 }
 
@@ -16,96 +20,94 @@ export function MessagePreview({
   lastMessage = "Say hi!",
   timestamp = "",
   unreadCount = 0,
+  isSentByMe = false,
   onPress,
 }: MessagePreviewProps) {
-  const theme = useTheme();
-
   return (
     <TouchableOpacity
       style={styles.container}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <List.Item
-        title={user.profile.name}
-        description={lastMessage}
-        titleStyle={styles.title}
-        descriptionStyle={styles.description}
-        descriptionNumberOfLines={1}
-        left={(props) =>
-          user.profile.photos && user.profile.photos.length > 0 ? (
-            <Avatar.Image
-              {...props}
-              size={56}
-              source={{ uri: user.profile.photos[0] }}
-            />
-          ) : (
-            <Avatar.Icon
-              {...props}
-              size={56}
-              icon="account"
-              style={{ backgroundColor: theme.colors.surfaceVariant }}
-            />
-          )
-        }
-        right={(props) => (
-          <View style={styles.rightContainer}>
-            {timestamp && (
-              <Text
-                variant="bodySmall"
-                style={[
-                  styles.timestamp,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-              >
-                {timestamp}
-              </Text>
-            )}
-            {unreadCount > 0 && (
-              <Badge
-                size={20}
-                style={[
-                  styles.badge,
-                  { backgroundColor: theme.colors.primary },
-                ]}
-              >
-                {unreadCount}
-              </Badge>
-            )}
+      <View style={styles.content}>
+        <View style={styles.leftSection}>
+          <View style={styles.badgeContainer}>
+            {unreadCount > 0 && <Badge dot style={styles.dot} />}
           </View>
-        )}
-        style={styles.item}
-      />
+          <Image
+            source={{ uri: user.profile.photos?.[0] || 'https://via.placeholder.com/150' }}
+            style={styles.avatar}
+            contentFit="cover"
+          />
+        </View>
+
+        <View style={styles.middleSection}>
+          <Text style={styles.name} numberOfLines={1}>
+            {user.profile.name}
+          </Text>
+          <Text style={styles.lastMessage} numberOfLines={1}>
+            {isSentByMe ? "You: " : ""}{lastMessage}
+          </Text>
+        </View>
+
+        <View style={styles.rightSection}>
+          <Text style={styles.timestamp}>
+            {timestamp}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 8,
+    backgroundColor: COLORS.background,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
   },
-  item: {
-    paddingVertical: 8,
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  title: {
-    fontWeight: "600",
-    fontSize: 16,
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: SPACING.sm,
   },
-  description: {
-    fontSize: 14,
-    marginTop: 4,
+  badgeContainer: {
+    width: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  rightContainer: {
-    flexDirection: "column",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    paddingVertical: 8,
+  dot: {
+    backgroundColor: COLORS.error,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  middleSection: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  name: {
+    ...TYPOGRAPHY.body,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  lastMessage: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textSecondary,
+  },
+  rightSection: {
+    alignItems: 'flex-end',
+    justifyContent: 'flex-start',
+    height: '100%',
   },
   timestamp: {
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  badge: {
-    fontWeight: "600",
+    ...TYPOGRAPHY.small,
+    color: COLORS.textSecondary,
   },
 });

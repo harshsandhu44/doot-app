@@ -1,41 +1,44 @@
 import React, { useState } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { Text, Button, Surface, useTheme } from "react-native-paper";
+import { View, StyleSheet, ScrollView, Platform } from "react-native";
+import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "../../contexts/onboarding-context";
 import * as Location from "expo-location";
+import { Button } from "../../components/button";
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+  BORDER_RADIUS,
+} from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function Step3() {
   const router = useRouter();
-  const theme = useTheme();
   const { data, updateData } = useOnboarding();
 
-  const [location, setLocation] = useState(data.location);
+  const [location, setLocation] = useState(
+    data.location || { city: "", coordinates: null },
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const requestLocation = async () => {
     setLoading(true);
     setError("");
-
     try {
-      // Request permission
       const { status } = await Location.requestForegroundPermissionsAsync();
-
       if (status !== "granted") {
         setError("Location permission is required to continue");
         setLoading(false);
         return;
       }
 
-      // Get current location
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
 
       const { latitude, longitude } = currentLocation.coords;
-
-      // Reverse geocode to get city name
       const [address] = await Location.reverseGeocodeAsync({
         latitude,
         longitude,
@@ -43,11 +46,7 @@ export default function Step3() {
 
       const city =
         address.city || address.subregion || address.region || "Unknown";
-
-      setLocation({
-        city,
-        coordinates: { latitude, longitude },
-      });
+      setLocation({ city, coordinates: { latitude, longitude } });
     } catch (err: any) {
       console.error("Location error:", err);
       setError("Failed to get location. Please try again.");
@@ -57,183 +56,148 @@ export default function Step3() {
   };
 
   const validateAndNext = () => {
-    setError("");
-
-    if (!location.coordinates) {
-      setError("Please allow location access to continue");
-      return;
-    }
-
-    // Save data and navigate
+    if (!location.coordinates)
+      return setError("Please allow location access to continue");
     updateData({ location });
     router.push("/(onboarding)/step-4");
   };
 
-  const goBack = () => {
-    router.back();
-  };
-
   return (
-    <Surface
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text variant="headlineMedium" style={styles.title}>
-            Your Location
-          </Text>
-          <Text
-            variant="bodyLarge"
-            style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}
-          >
-            We need your location to show you people nearby
-          </Text>
+        <Text style={styles.title}>Where are you?</Text>
+        <Text style={styles.subtitle}>
+          Find people nearby by sharing your location
+        </Text>
 
-          {error ? (
-            <Surface
-              style={[
-                styles.errorContainer,
-                { backgroundColor: theme.colors.errorContainer },
-              ]}
-            >
-              <Text style={{ color: theme.colors.onErrorContainer }}>
-                {error}
-              </Text>
-            </Surface>
-          ) : null}
+        <View style={styles.centerSection}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="location" size={48} color={COLORS.primary} />
+          </View>
 
           {location.coordinates ? (
-            <Surface
-              style={[
-                styles.locationCard,
-                { backgroundColor: theme.colors.primaryContainer },
-              ]}
-            >
-              <Text variant="titleMedium" style={styles.locationTitle}>
-                Location Detected
-              </Text>
-              <Text variant="bodyLarge" style={styles.cityName}>
-                {location.city}
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={[
-                  styles.coordinates,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-              >
-                {location.coordinates.latitude.toFixed(4)},{" "}
-                {location.coordinates.longitude.toFixed(4)}
-              </Text>
-            </Surface>
-          ) : (
-            <View style={styles.emptyState}>
-              <Text
-                variant="bodyMedium"
-                style={[
-                  styles.emptyText,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-              >
-                Tap the button below to allow location access
-              </Text>
+            <View style={styles.locationCard}>
+              <Text style={styles.locationTitle}>Location detected</Text>
+              <Text style={styles.cityName}>{location.city}</Text>
             </View>
+          ) : (
+            <Text style={styles.emptyText}>
+              We need your location to show you the most relevant profiles
+              nearby.
+            </Text>
           )}
 
           <Button
-            mode="contained"
+            title={location.coordinates ? "Update Location" : "Enable Location"}
             onPress={requestLocation}
             loading={loading}
-            disabled={loading}
-            style={styles.locationButton}
-            icon="map-marker"
-          >
-            {location.coordinates ? "Update Location" : "Enable Location"}
-          </Button>
-
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="outlined"
-              onPress={goBack}
-              style={styles.backButton}
-              disabled={loading}
-            >
-              Back
-            </Button>
-            <Button
-              mode="contained"
-              onPress={validateAndNext}
-              style={styles.nextButton}
-              disabled={!location.coordinates || loading}
-            >
-              Next
-            </Button>
-          </View>
+            variant="ghost"
+          />
         </View>
+
+        <View style={styles.tipContainer}>
+          <Ionicons
+            name="shield-checkmark-outline"
+            size={20}
+            color={COLORS.success}
+          />
+          <Text style={styles.tipText}>
+            Your exact location is never shown to other users.
+          </Text>
+        </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>
-    </Surface>
+
+      <View style={styles.footer}>
+        <Button
+          title="Continue"
+          onPress={validateAndNext}
+          disabled={!location.coordinates || loading}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
+    padding: SPACING.lg,
+    paddingBottom: 100,
   },
   title: {
-    marginBottom: 8,
-    marginTop: 16,
+    ...TYPOGRAPHY.title,
+    fontSize: 28,
   },
   subtitle: {
-    marginBottom: 32,
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xxl,
   },
-  errorContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+  centerSection: {
+    alignItems: "center",
+    gap: SPACING.lg,
+  },
+  iconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: COLORS.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   locationCard: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 24,
     alignItems: "center",
+    gap: 4,
   },
   locationTitle: {
-    marginBottom: 8,
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textSecondary,
   },
   cityName: {
+    ...TYPOGRAPHY.heading,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 4,
-  },
-  coordinates: {
-    fontSize: 12,
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: "center",
-    marginBottom: 24,
   },
   emptyText: {
+    ...TYPOGRAPHY.body,
     textAlign: "center",
+    color: COLORS.textSecondary,
+    paddingHorizontal: SPACING.xl,
   },
-  locationButton: {
-    marginBottom: 24,
-  },
-  buttonContainer: {
+  tipContainer: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: "auto",
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.medium,
+    marginTop: SPACING.xxl,
+    gap: SPACING.sm,
+    alignItems: "center",
   },
-  backButton: {
+  tipText: {
+    ...TYPOGRAPHY.caption,
     flex: 1,
   },
-  nextButton: {
-    flex: 2,
+  errorText: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.error,
+    textAlign: "center",
+    marginTop: SPACING.md,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: SPACING.lg,
+    paddingBottom: Platform.OS === "ios" ? 40 : 24,
+    backgroundColor: COLORS.background,
   },
 });
+
