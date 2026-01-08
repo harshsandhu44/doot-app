@@ -17,15 +17,19 @@ import { useRouter, Stack } from "expo-router";
 import { getUserProfile, updatePreferences } from "../services/user";
 import { UserProfile } from "../models/user";
 import Slider from "@react-native-community/slider";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
   const theme = useTheme();
   const router = useRouter();
-  const [, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showPreferencesDialog, setShowPreferencesDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [profileIncomplete, setProfileIncomplete] = useState(false);
 
   // Preferences state
   const [lookingFor, setLookingFor] = useState<"male" | "female" | "everyone">(
@@ -50,9 +54,13 @@ export default function SettingsScreen() {
         setLookingFor(profile.preferences.lookingFor);
         setAgeRange(profile.preferences.ageRange);
         setDistance(profile.preferences.distanceRadius);
+        setProfileIncomplete(false);
+      } else {
+        setProfileIncomplete(true);
       }
     } catch (err) {
       console.error("Error loading profile:", err);
+      setProfileIncomplete(true);
     } finally {
       setLoading(false);
     }
@@ -69,8 +77,13 @@ export default function SettingsScreen() {
       });
       setShowPreferencesDialog(false);
       loadProfile();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error updating preferences:", err);
+      setShowPreferencesDialog(false);
+      setErrorMessage(
+        err.message || "Failed to update preferences. Please complete your profile first."
+      );
+      setShowErrorDialog(true);
     }
   };
 
@@ -111,7 +124,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <>
+    <SafeAreaView>
       <Stack.Screen
         options={{
           title: "Settings",
@@ -120,211 +133,258 @@ export default function SettingsScreen() {
           ),
         }}
       />
-      <Surface
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <ScrollView>
-          <List.Section>
-            <List.Subheader>Account</List.Subheader>
-            <List.Item
-              title="Email"
-              description={user?.email}
-              left={(props) => <List.Icon {...props} icon="email" />}
-            />
-            <Divider />
-          </List.Section>
+      <ScrollView>
+        <List.Section>
+          <List.Subheader>Account</List.Subheader>
+          <List.Item
+            title="Email"
+            description={user?.email}
+            left={(props) => <List.Icon {...props} icon="email" />}
+          />
+          <Divider />
+        </List.Section>
 
-          <List.Section>
-            <List.Subheader>Discovery Preferences</List.Subheader>
-            <List.Item
-              title="Gender Preference"
-              description={
-                lookingFor === "everyone"
+        <List.Section>
+          <List.Subheader>Discovery Preferences</List.Subheader>
+          {profileIncomplete && (
+            <View style={{ padding: 16, backgroundColor: theme.colors.errorContainer, marginHorizontal: 16, borderRadius: 8, marginBottom: 8 }}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onErrorContainer }}>
+                Complete your profile to edit preferences
+              </Text>
+            </View>
+          )}
+          <List.Item
+            title="Gender Preference"
+            description={
+              profileIncomplete
+                ? "Complete profile first"
+                : lookingFor === "everyone"
                   ? "Everyone"
                   : lookingFor === "male"
                     ? "Men"
                     : "Women"
+            }
+            left={(props) => <List.Icon {...props} icon="gender-male-female" />}
+            onPress={() => {
+              if (profileIncomplete) {
+                setErrorMessage("Please complete your profile before editing preferences.");
+                setShowErrorDialog(true);
+              } else {
+                setShowPreferencesDialog(true);
               }
-              left={(props) => (
-                <List.Icon {...props} icon="gender-male-female" />
-              )}
-              onPress={() => setShowPreferencesDialog(true)}
-            />
-            <List.Item
-              title="Age Range"
-              description={`${ageRange.min} - ${ageRange.max} years`}
-              left={(props) => <List.Icon {...props} icon="account-clock" />}
-              onPress={() => setShowPreferencesDialog(true)}
-            />
-            <List.Item
-              title="Distance"
-              description={`Up to ${distance} km`}
-              left={(props) => (
-                <List.Icon {...props} icon="map-marker-radius" />
-              )}
-              onPress={() => setShowPreferencesDialog(true)}
-            />
-            <Divider />
-          </List.Section>
+            }}
+            disabled={profileIncomplete}
+          />
+          <List.Item
+            title="Age Range"
+            description={
+              profileIncomplete
+                ? "Complete profile first"
+                : `${ageRange.min} - ${ageRange.max} years`
+            }
+            left={(props) => <List.Icon {...props} icon="account-clock" />}
+            onPress={() => {
+              if (profileIncomplete) {
+                setErrorMessage("Please complete your profile before editing preferences.");
+                setShowErrorDialog(true);
+              } else {
+                setShowPreferencesDialog(true);
+              }
+            }}
+            disabled={profileIncomplete}
+          />
+          <List.Item
+            title="Distance"
+            description={
+              profileIncomplete
+                ? "Complete profile first"
+                : `Up to ${distance} km`
+            }
+            left={(props) => <List.Icon {...props} icon="map-marker-radius" />}
+            onPress={() => {
+              if (profileIncomplete) {
+                setErrorMessage("Please complete your profile before editing preferences.");
+                setShowErrorDialog(true);
+              } else {
+                setShowPreferencesDialog(true);
+              }
+            }}
+            disabled={profileIncomplete}
+          />
+          <Divider />
+        </List.Section>
 
-          <List.Section>
-            <List.Subheader>Privacy</List.Subheader>
-            <List.Item
-              title="Block List"
-              description="Manage blocked users"
-              left={(props) => <List.Icon {...props} icon="account-cancel" />}
-              onPress={() => {}}
-            />
-            <Divider />
-          </List.Section>
+        <List.Section>
+          <List.Subheader>Privacy</List.Subheader>
+          <List.Item
+            title="Block List"
+            description="Manage blocked users"
+            left={(props) => <List.Icon {...props} icon="account-cancel" />}
+            onPress={() => {}}
+          />
+          <Divider />
+        </List.Section>
 
-          <List.Section>
-            <List.Subheader>About</List.Subheader>
-            <List.Item
-              title="Terms of Service"
-              left={(props) => <List.Icon {...props} icon="file-document" />}
-              onPress={() => {}}
-            />
-            <List.Item
-              title="Privacy Policy"
-              left={(props) => <List.Icon {...props} icon="shield-lock" />}
-              onPress={() => {}}
-            />
-            <List.Item
-              title="App Version"
-              description="1.0.0"
-              left={(props) => <List.Icon {...props} icon="information" />}
-            />
-            <Divider />
-          </List.Section>
+        <List.Section>
+          <List.Subheader>About</List.Subheader>
+          <List.Item
+            title="Terms of Service"
+            left={(props) => <List.Icon {...props} icon="file-document" />}
+            onPress={() => {}}
+          />
+          <List.Item
+            title="Privacy Policy"
+            left={(props) => <List.Icon {...props} icon="shield-lock" />}
+            onPress={() => {}}
+          />
+          <List.Item
+            title="App Version"
+            description="1.0.0"
+            left={(props) => <List.Icon {...props} icon="information" />}
+          />
+          <Divider />
+        </List.Section>
 
-          <View style={styles.logoutContainer}>
-            <Button
-              mode="contained"
-              onPress={() => setShowLogoutDialog(true)}
-              buttonColor={theme.colors.errorContainer}
-              textColor={theme.colors.onErrorContainer}
-              style={styles.logoutButton}
-            >
+        <View style={styles.logoutContainer}>
+          <Button
+            mode="contained"
+            onPress={() => setShowLogoutDialog(true)}
+            buttonColor={theme.colors.errorContainer}
+            textColor={theme.colors.onErrorContainer}
+            style={styles.logoutButton}
+          >
+            Logout
+          </Button>
+        </View>
+      </ScrollView>
+
+      <Portal>
+        <Dialog
+          visible={showLogoutDialog}
+          onDismiss={() => setShowLogoutDialog(false)}
+        >
+          <Dialog.Title>Logout</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">Are you sure you want to logout?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
+            <Button onPress={handleLogout} textColor={theme.colors.error}>
               Logout
             </Button>
-          </View>
-        </ScrollView>
+          </Dialog.Actions>
+        </Dialog>
 
-        <Portal>
-          <Dialog
-            visible={showLogoutDialog}
-            onDismiss={() => setShowLogoutDialog(false)}
-          >
-            <Dialog.Title>Logout</Dialog.Title>
-            <Dialog.Content>
-              <Text variant="bodyMedium">Are you sure you want to logout?</Text>
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
-              <Button onPress={handleLogout} textColor={theme.colors.error}>
-                Logout
+        <Dialog
+          visible={showPreferencesDialog}
+          onDismiss={() => setShowPreferencesDialog(false)}
+        >
+          <Dialog.Title>Discovery Preferences</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="labelLarge" style={{ marginBottom: 8 }}>
+              Show me
+            </Text>
+            <View style={styles.radioGroup}>
+              <Button
+                mode={lookingFor === "everyone" ? "contained" : "outlined"}
+                onPress={() => setLookingFor("everyone")}
+                style={styles.radioButton}
+              >
+                Everyone
               </Button>
-            </Dialog.Actions>
-          </Dialog>
-
-          <Dialog
-            visible={showPreferencesDialog}
-            onDismiss={() => setShowPreferencesDialog(false)}
-          >
-            <Dialog.Title>Discovery Preferences</Dialog.Title>
-            <Dialog.Content>
-              <Text variant="labelLarge" style={{ marginBottom: 8 }}>
-                Show me
-              </Text>
-              <View style={styles.radioGroup}>
-                <Button
-                  mode={lookingFor === "everyone" ? "contained" : "outlined"}
-                  onPress={() => setLookingFor("everyone")}
-                  style={styles.radioButton}
-                >
-                  Everyone
-                </Button>
-                <Button
-                  mode={lookingFor === "male" ? "contained" : "outlined"}
-                  onPress={() => setLookingFor("male")}
-                  style={styles.radioButton}
-                >
-                  Men
-                </Button>
-                <Button
-                  mode={lookingFor === "female" ? "contained" : "outlined"}
-                  onPress={() => setLookingFor("female")}
-                  style={styles.radioButton}
-                >
-                  Women
-                </Button>
-              </View>
-
-              <Text
-                variant="labelLarge"
-                style={{ marginTop: 16, marginBottom: 8 }}
+              <Button
+                mode={lookingFor === "male" ? "contained" : "outlined"}
+                onPress={() => setLookingFor("male")}
+                style={styles.radioButton}
               >
-                Age range: {ageRange.min} - {ageRange.max}
-              </Text>
-              <View style={styles.sliderContainer}>
-                <Text variant="bodySmall">Min: {ageRange.min}</Text>
-                <Slider
-                  style={styles.slider}
-                  minimumValue={18}
-                  maximumValue={100}
-                  step={1}
-                  value={ageRange.min}
-                  onValueChange={(value) =>
-                    setAgeRange({ ...ageRange, min: value })
-                  }
-                  minimumTrackTintColor={theme.colors.primary}
-                  maximumTrackTintColor={theme.colors.surfaceVariant}
-                />
-              </View>
-              <View style={styles.sliderContainer}>
-                <Text variant="bodySmall">Max: {ageRange.max}</Text>
-                <Slider
-                  style={styles.slider}
-                  minimumValue={18}
-                  maximumValue={100}
-                  step={1}
-                  value={ageRange.max}
-                  onValueChange={(value) =>
-                    setAgeRange({ ...ageRange, max: value })
-                  }
-                  minimumTrackTintColor={theme.colors.primary}
-                  maximumTrackTintColor={theme.colors.surfaceVariant}
-                />
-              </View>
-
-              <Text
-                variant="labelLarge"
-                style={{ marginTop: 16, marginBottom: 8 }}
+                Men
+              </Button>
+              <Button
+                mode={lookingFor === "female" ? "contained" : "outlined"}
+                onPress={() => setLookingFor("female")}
+                style={styles.radioButton}
               >
-                Distance: {distance} km
-              </Text>
+                Women
+              </Button>
+            </View>
+
+            <Text
+              variant="labelLarge"
+              style={{ marginTop: 16, marginBottom: 8 }}
+            >
+              Age range: {ageRange.min} - {ageRange.max}
+            </Text>
+            <View style={styles.sliderContainer}>
+              <Text variant="bodySmall">Min: {ageRange.min}</Text>
               <Slider
                 style={styles.slider}
-                minimumValue={1}
-                maximumValue={200}
+                minimumValue={18}
+                maximumValue={100}
                 step={1}
-                value={distance}
-                onValueChange={setDistance}
+                value={ageRange.min}
+                onValueChange={(value) =>
+                  setAgeRange({ ...ageRange, min: value })
+                }
                 minimumTrackTintColor={theme.colors.primary}
                 maximumTrackTintColor={theme.colors.surfaceVariant}
               />
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setShowPreferencesDialog(false)}>
-                Cancel
-              </Button>
-              <Button onPress={handleSavePreferences}>Save</Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
-      </Surface>
-    </>
+            </View>
+            <View style={styles.sliderContainer}>
+              <Text variant="bodySmall">Max: {ageRange.max}</Text>
+              <Slider
+                style={styles.slider}
+                minimumValue={18}
+                maximumValue={100}
+                step={1}
+                value={ageRange.max}
+                onValueChange={(value) =>
+                  setAgeRange({ ...ageRange, max: value })
+                }
+                minimumTrackTintColor={theme.colors.primary}
+                maximumTrackTintColor={theme.colors.surfaceVariant}
+              />
+            </View>
+
+            <Text
+              variant="labelLarge"
+              style={{ marginTop: 16, marginBottom: 8 }}
+            >
+              Distance: {distance} km
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={1}
+              maximumValue={200}
+              step={1}
+              value={distance}
+              onValueChange={setDistance}
+              minimumTrackTintColor={theme.colors.primary}
+              maximumTrackTintColor={theme.colors.surfaceVariant}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowPreferencesDialog(false)}>
+              Cancel
+            </Button>
+            <Button onPress={handleSavePreferences}>Save</Button>
+          </Dialog.Actions>
+        </Dialog>
+        <Dialog visible={showErrorDialog} onDismiss={() => setShowErrorDialog(false)}>
+          <Dialog.Title>Error</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">{errorMessage}</Text>
+            {profileIncomplete && (
+              <Text variant="bodySmall" style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
+                It looks like you haven't completed your profile yet. Please complete the onboarding to use all features.
+              </Text>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowErrorDialog(false)}>OK</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </SafeAreaView>
   );
 }
 

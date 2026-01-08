@@ -1,6 +1,12 @@
-import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, Timestamp, setDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { UserProfile } from "../models/user";
+
+// Check if user profile exists
+async function profileExists(userId: string): Promise<boolean> {
+  const userDoc = await getDoc(doc(db, "userProfiles", userId));
+  return userDoc.exists();
+}
 
 // Get user profile by ID
 export async function getUserProfile(
@@ -26,6 +32,11 @@ export async function updateUserProfile(
   updates: Partial<UserProfile>,
 ): Promise<void> {
   try {
+    const exists = await profileExists(userId);
+    if (!exists) {
+      throw new Error("User profile not found. Please complete onboarding first.");
+    }
+    
     await updateDoc(doc(db, "userProfiles", userId), {
       ...updates,
       "metadata.lastActive": Timestamp.now(),
@@ -98,6 +109,11 @@ export async function updatePreferences(
   },
 ): Promise<void> {
   try {
+    const exists = await profileExists(userId);
+    if (!exists) {
+      throw new Error("User profile not found. Please complete onboarding first.");
+    }
+
     const updates: any = {
       "metadata.lastActive": Timestamp.now(),
     };
