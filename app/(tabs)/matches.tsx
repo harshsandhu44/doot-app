@@ -1,15 +1,24 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, FlatList, RefreshControl, TextInput, Dimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  TextInput,
+} from "react-native";
 import { Text, ActivityIndicator } from "react-native-paper";
 import { useAuth } from "../../contexts/auth-context";
 import { ExternalPathString, useRouter } from "expo-router";
 import { MatchCard } from "../../components/match-card";
 import { EmptyState } from "../../components/empty-state";
 import { getMatches, getRecentMatches, Match } from "../../services/matches";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+  BORDER_RADIUS,
+} from "../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function MatchesScreen() {
   const { user } = useAuth();
@@ -54,8 +63,10 @@ export default function MatchesScreen() {
     if (searchQuery.trim() === "") {
       setFilteredMatches(combined);
     } else {
-      const filtered = combined.filter((m) => 
-        m.otherUser?.profile.name.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = combined.filter((m) =>
+        m.otherUser?.profile.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()),
       );
       setFilteredMatches(filtered);
     }
@@ -104,7 +115,12 @@ export default function MatchesScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={COLORS.textSecondary} style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={20}
+            color={COLORS.textSecondary}
+            style={styles.searchIcon}
+          />
           <TextInput
             placeholder="Search matches"
             style={styles.searchInput}
@@ -121,14 +137,18 @@ export default function MatchesScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => {
           const isFirstOfAllMatches = index === recentMatches.length;
-          const showNewHeader = index === 0 && recentMatches.length > 0 && searchQuery === "";
-          const showAllHeader = isFirstOfAllMatches && allMatches.length > 0 && searchQuery === "";
+          const showNewHeader =
+            index === 0 && recentMatches.length > 0 && searchQuery === "";
+          const showAllHeader =
+            isFirstOfAllMatches && allMatches.length > 0 && searchQuery === "";
 
           return (
             <View style={styles.matchWrapper}>
               {showNewHeader && (
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>New Matches ({recentMatches.length})</Text>
+                  <Text style={styles.sectionTitle}>
+                    New Matches ({recentMatches.length})
+                  </Text>
                 </View>
               )}
               {showAllHeader && (
@@ -159,7 +179,11 @@ export default function MatchesScreen() {
             <EmptyState
               icon="heart-dislike-outline"
               title={searchQuery ? "No matches found" : "No matches yet"}
-              description={searchQuery ? "Try searching for someone else" : "Keep swiping to find your match!"}
+              description={
+                searchQuery
+                  ? "Try searching for someone else"
+                  : "Keep swiping to find your match!"
+              }
             />
           ) : null
         }
@@ -204,11 +228,10 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.lg,
   },
   matchWrapper: {
-    flex: 1/2,
+    flex: 1 / 2,
     alignItems: "center",
   },
   sectionHeader: {
-    width: SCREEN_WIDTH - SPACING.md * 2,
     paddingVertical: SPACING.sm,
     backgroundColor: COLORS.background,
   },

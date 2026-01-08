@@ -1,18 +1,25 @@
 import React, { useState } from "react";
 import { View, StyleSheet, ScrollView, Platform } from "react-native";
-import { Text, ActivityIndicator } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "../../contexts/onboarding-context";
 import * as Location from "expo-location";
 import { Button } from "../../components/button";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+  BORDER_RADIUS,
+} from "../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Step3() {
   const router = useRouter();
   const { data, updateData } = useOnboarding();
 
-  const [location, setLocation] = useState(data.location || { city: "", coordinates: null });
+  const [location, setLocation] = useState(
+    data.location || { city: "", coordinates: null },
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,9 +39,13 @@ export default function Step3() {
       });
 
       const { latitude, longitude } = currentLocation.coords;
-      const [address] = await Location.reverseGeocodeAsync({ latitude, longitude });
+      const [address] = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
 
-      const city = address.city || address.subregion || address.region || "Unknown";
+      const city =
+        address.city || address.subregion || address.region || "Unknown";
       setLocation({ city, coordinates: { latitude, longitude } });
     } catch (err: any) {
       console.error("Location error:", err);
@@ -45,7 +56,8 @@ export default function Step3() {
   };
 
   const validateAndNext = () => {
-    if (!location.coordinates) return setError("Please allow location access to continue");
+    if (!location.coordinates)
+      return setError("Please allow location access to continue");
     updateData({ location });
     router.push("/(onboarding)/step-4");
   };
@@ -54,13 +66,15 @@ export default function Step3() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Where are you?</Text>
-        <Text style={styles.subtitle}>Find people nearby by sharing your location</Text>
+        <Text style={styles.subtitle}>
+          Find people nearby by sharing your location
+        </Text>
 
         <View style={styles.centerSection}>
           <View style={styles.iconCircle}>
             <Ionicons name="location" size={48} color={COLORS.primary} />
           </View>
-          
+
           {location.coordinates ? (
             <View style={styles.locationCard}>
               <Text style={styles.locationTitle}>Location detected</Text>
@@ -68,7 +82,8 @@ export default function Step3() {
             </View>
           ) : (
             <Text style={styles.emptyText}>
-              We need your location to show you the most relevant profiles nearby.
+              We need your location to show you the most relevant profiles
+              nearby.
             </Text>
           )}
 
@@ -77,17 +92,20 @@ export default function Step3() {
             onPress={requestLocation}
             loading={loading}
             variant="ghost"
-            style={styles.locationButton}
           />
         </View>
 
         <View style={styles.tipContainer}>
-          <Ionicons name="shield-checkmark-outline" size={20} color={COLORS.success} />
+          <Ionicons
+            name="shield-checkmark-outline"
+            size={20}
+            color={COLORS.success}
+          />
           <Text style={styles.tipText}>
             Your exact location is never shown to other users.
           </Text>
         </View>
-        
+
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>
 
@@ -121,7 +139,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xxl,
   },
   centerSection: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: SPACING.lg,
   },
   iconCircle: {
@@ -129,13 +147,13 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     backgroundColor: COLORS.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   locationCard: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
   },
   locationTitle: {
@@ -145,25 +163,22 @@ const styles = StyleSheet.create({
   cityName: {
     ...TYPOGRAPHY.heading,
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    textAlign: 'center',
+    textAlign: "center",
     color: COLORS.textSecondary,
     paddingHorizontal: SPACING.xl,
   },
-  locationButton: {
-    width: '100%',
-  },
   tipContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: COLORS.surface,
     padding: SPACING.md,
     borderRadius: BORDER_RADIUS.medium,
     marginTop: SPACING.xxl,
     gap: SPACING.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
   tipText: {
     ...TYPOGRAPHY.caption,
@@ -172,16 +187,17 @@ const styles = StyleSheet.create({
   errorText: {
     ...TYPOGRAPHY.small,
     color: COLORS.error,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: SPACING.md,
   },
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     padding: SPACING.lg,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    paddingBottom: Platform.OS === "ios" ? 40 : 24,
     backgroundColor: COLORS.background,
   },
 });
+

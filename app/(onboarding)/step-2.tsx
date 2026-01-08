@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { Text } from "react-native-paper";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 import { useOnboarding } from "../../contexts/onboarding-context";
 import * as ImagePicker from "expo-image-picker";
 import { Button } from "../../components/button";
@@ -60,10 +60,24 @@ export default function Step2() {
     router.push("/(onboarding)/step-3");
   };
 
+  const handleSkip = () => {
+    updateData({ photos: [] });
+    router.push("/(onboarding)/step-3");
+  };
+
   const emptySlots = 6 - photos.length;
 
   return (
     <View style={styles.container}>
+      <Stack.Screen 
+        options={{
+          headerRight: () => (
+            <TouchableOpacity onPress={handleSkip} style={styles.skipHeaderButton}>
+              <Text style={styles.skipHeaderText}>Skip</Text>
+            </TouchableOpacity>
+          )
+        }}
+      />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Add your best photos</Text>
         <Text style={styles.subtitle}>Upload at least 2 photos to stand out</Text>
@@ -185,5 +199,13 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
     backgroundColor: COLORS.background,
+  },
+  skipHeaderButton: {
+    paddingHorizontal: SPACING.md,
+  },
+  skipHeaderText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
 });

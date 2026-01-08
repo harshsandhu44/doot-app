@@ -64,17 +64,44 @@ export default function Step4() {
               <Text style={styles.label}>Age range</Text>
               <Text style={styles.rangeValue}>{ageMin} - {ageMax}</Text>
             </View>
-            <Slider
-              style={styles.slider}
-              minimumValue={18}
-              maximumValue={80}
-              step={1}
-              value={ageMax}
-              onValueChange={setAgeMax}
-              minimumTrackTintColor={COLORS.primary}
-              maximumTrackTintColor={COLORS.border}
-              thumbTintColor={COLORS.primary}
-            />
+            
+            <View style={styles.rangeSliderContainer}>
+              <View style={styles.sliderRow}>
+                <Text style={styles.sliderLabel}>Min: {ageMin}</Text>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={18}
+                  maximumValue={80}
+                  step={1}
+                  value={ageMin}
+                  onValueChange={(val) => {
+                    setAgeMin(val);
+                    if (val > ageMax) setAgeMax(val);
+                  }}
+                  minimumTrackTintColor={COLORS.primary}
+                  maximumTrackTintColor={COLORS.border}
+                  thumbTintColor={COLORS.primary}
+                />
+              </View>
+
+              <View style={styles.sliderRow}>
+                <Text style={styles.sliderLabel}>Max: {ageMax}</Text>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={18}
+                  maximumValue={80}
+                  step={1}
+                  value={ageMax}
+                  onValueChange={(val) => {
+                    setAgeMax(val);
+                    if (val < ageMin) setAgeMin(val);
+                  }}
+                  minimumTrackTintColor={COLORS.primary}
+                  maximumTrackTintColor={COLORS.border}
+                  thumbTintColor={COLORS.primary}
+                />
+              </View>
+            </View>
           </View>
 
           <View style={styles.sliderSection}>
@@ -161,6 +188,18 @@ const styles = StyleSheet.create({
   },
   sliderSection: {
     gap: SPACING.sm,
+  },
+  rangeSliderContainer: {
+    gap: SPACING.md,
+    marginTop: SPACING.xs,
+  },
+  sliderRow: {
+    gap: 0,
+  },
+  sliderLabel: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textSecondary,
+    marginBottom: -4,
   },
   sliderHeader: {
     flexDirection: 'row',

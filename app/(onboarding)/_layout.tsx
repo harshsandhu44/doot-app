@@ -46,16 +46,6 @@ export default function OnboardingLayout() {
               </TouchableOpacity>
             ) : null
           ),
-          headerRight: () => (
-            isOptional ? (
-              <TouchableOpacity 
-                onPress={() => router.push(`/step-${currentStep + 1}` as any)} 
-                style={styles.headerButton}
-              >
-                <Text style={styles.skipText}>Skip</Text>
-              </TouchableOpacity>
-            ) : null
-          ),
         }}
       >
         <Stack.Screen name="step-1" />
