@@ -1,10 +1,10 @@
-import { doc, getDoc, updateDoc, Timestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { UserProfile } from "../models/user";
 
 // Check if user profile exists
 async function profileExists(userId: string): Promise<boolean> {
-  const userDoc = await getDoc(doc(db, "userProfiles", userId));
+  const userDoc = await getDoc(doc(db, "users", userId));
   return userDoc.exists();
 }
 
@@ -13,7 +13,7 @@ export async function getUserProfile(
   userId: string,
 ): Promise<UserProfile | null> {
   try {
-    const userDoc = await getDoc(doc(db, "userProfiles", userId));
+    const userDoc = await getDoc(doc(db, "users", userId));
 
     if (!userDoc.exists()) {
       return null;
@@ -34,10 +34,12 @@ export async function updateUserProfile(
   try {
     const exists = await profileExists(userId);
     if (!exists) {
-      throw new Error("User profile not found. Please complete onboarding first.");
+      throw new Error(
+        "User profile not found. Please complete onboarding first.",
+      );
     }
-    
-    await updateDoc(doc(db, "userProfiles", userId), {
+
+    await updateDoc(doc(db, "users", userId), {
       ...updates,
       "metadata.lastActive": Timestamp.now(),
     });
@@ -55,7 +57,7 @@ export async function updateBasicInfo(
   bio: string,
 ): Promise<void> {
   try {
-    await updateDoc(doc(db, "userProfiles", userId), {
+    await updateDoc(doc(db, "users", userId), {
       "profile.name": name,
       "profile.age": age,
       "profile.bio": bio,
@@ -73,7 +75,7 @@ export async function updatePhotos(
   photos: string[],
 ): Promise<void> {
   try {
-    await updateDoc(doc(db, "userProfiles", userId), {
+    await updateDoc(doc(db, "users", userId), {
       "profile.photos": photos,
       "metadata.lastActive": Timestamp.now(),
     });
@@ -89,7 +91,7 @@ export async function updateInterests(
   interests: string[],
 ): Promise<void> {
   try {
-    await updateDoc(doc(db, "userProfiles", userId), {
+    await updateDoc(doc(db, "users", userId), {
       "profile.interests": interests,
       "metadata.lastActive": Timestamp.now(),
     });
@@ -111,7 +113,9 @@ export async function updatePreferences(
   try {
     const exists = await profileExists(userId);
     if (!exists) {
-      throw new Error("User profile not found. Please complete onboarding first.");
+      throw new Error(
+        "User profile not found. Please complete onboarding first.",
+      );
     }
 
     const updates: any = {
@@ -128,7 +132,7 @@ export async function updatePreferences(
       updates["preferences.distanceRadius"] = preferences.distanceRadius;
     }
 
-    await updateDoc(doc(db, "userProfiles", userId), updates);
+    await updateDoc(doc(db, "users", userId), updates);
   } catch (error) {
     console.error("Error updating preferences:", error);
     throw error;
@@ -138,7 +142,7 @@ export async function updatePreferences(
 // Update last active timestamp
 export async function updateLastActive(userId: string): Promise<void> {
   try {
-    await updateDoc(doc(db, "userProfiles", userId), {
+    await updateDoc(doc(db, "users", userId), {
       "metadata.lastActive": Timestamp.now(),
     });
   } catch (error) {

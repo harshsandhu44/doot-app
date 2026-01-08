@@ -38,7 +38,7 @@ function calculateDistance(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -56,13 +56,11 @@ function calculateDistance(
 // Fetch potential profiles for swiping
 export async function fetchProfiles(
   currentUserId: string,
-  maxProfiles: number = 20
+  maxProfiles: number = 20,
 ): Promise<(UserProfile & { distance: number })[]> {
   try {
     // Get current user's profile and preferences
-    const currentUserDoc = await getDoc(
-      doc(db, "userProfiles", currentUserId)
-    );
+    const currentUserDoc = await getDoc(doc(db, "users", currentUserId));
     if (!currentUserDoc.exists()) {
       throw new Error("Current user profile not found");
     }
@@ -75,16 +73,16 @@ export async function fetchProfiles(
     const swipesQuery = query(swipesRef, where("userId", "==", currentUserId));
     const swipesSnapshot = await getDocs(swipesQuery);
     const swipedUserIds = new Set(
-      swipesSnapshot.docs.map((doc) => doc.data().targetUserId)
+      swipesSnapshot.docs.map((doc) => doc.data().targetUserId),
     );
 
     // Query potential matches
-    const usersRef = collection(db, "userProfiles");
+    const usersRef = collection(db, "users");
     let usersQuery = query(
       usersRef,
       where("metadata.profileComplete", "==", true),
       orderBy("metadata.lastActive", "desc"),
-      limit(maxProfiles + swipedUserIds.size + 1) // Extra to account for filtering
+      limit(maxProfiles + swipedUserIds.size + 1), // Extra to account for filtering
     );
 
     const usersSnapshot = await getDocs(usersQuery);
@@ -135,7 +133,7 @@ export async function fetchProfiles(
         profile.location.coordinates.latitude,
         profile.location.coordinates.longitude,
         userData.profile.location.coordinates.latitude,
-        userData.profile.location.coordinates.longitude
+        userData.profile.location.coordinates.longitude,
       );
 
       // Check distance preference
@@ -161,7 +159,7 @@ export async function fetchProfiles(
 export async function recordSwipe(
   userId: string,
   targetUserId: string,
-  action: "like" | "pass" | "superlike"
+  action: "like" | "pass" | "superlike",
 ): Promise<{ matched: boolean; matchId?: string }> {
   try {
     // Create swipe document
@@ -200,10 +198,7 @@ export async function recordSwipe(
 }
 
 // Create a match between two users
-async function createMatch(
-  userId1: string,
-  userId2: string
-): Promise<string> {
+async function createMatch(userId1: string, userId2: string): Promise<string> {
   try {
     // Create match document with sorted user IDs for consistency
     const users = [userId1, userId2].sort();
@@ -215,10 +210,10 @@ async function createMatch(
     });
 
     // Add match to both users' match lists
-    await updateDoc(doc(db, "userProfiles", userId1), {
+    await updateDoc(doc(db, "users", userId1), {
       "metadata.matches": arrayUnion(matchId),
     });
-    await updateDoc(doc(db, "userProfiles", userId2), {
+    await updateDoc(doc(db, "users", userId2), {
       "metadata.matches": arrayUnion(matchId),
     });
 
@@ -232,7 +227,7 @@ async function createMatch(
 // Check if two users have matched
 export async function checkForMatch(
   userId: string,
-  targetUserId: string
+  targetUserId: string,
 ): Promise<boolean> {
   try {
     const users = [userId, targetUserId].sort();

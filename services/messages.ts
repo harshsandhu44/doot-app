@@ -34,7 +34,7 @@ export async function sendMessage(
   matchId: string,
   senderId: string,
   receiverId: string,
-  text: string
+  text: string,
 ): Promise<Message> {
   try {
     const messagesRef = collection(db, "messages");
@@ -75,7 +75,7 @@ export async function getMessages(matchId: string): Promise<Message[]> {
     const messagesQuery = query(
       messagesRef,
       where("matchId", "==", matchId),
-      orderBy("timestamp", "asc")
+      orderBy("timestamp", "asc"),
     );
 
     const messagesSnapshot = await getDocs(messagesQuery);
@@ -84,7 +84,7 @@ export async function getMessages(matchId: string): Promise<Message[]> {
         ({
           id: doc.id,
           ...doc.data(),
-        }) as Message
+        }) as Message,
     );
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -95,14 +95,14 @@ export async function getMessages(matchId: string): Promise<Message[]> {
 // Subscribe to real-time messages
 export function subscribeToMessages(
   matchId: string,
-  callback: (messages: Message[]) => void
+  callback: (messages: Message[]) => void,
 ): () => void {
   try {
     const messagesRef = collection(db, "messages");
     const messagesQuery = query(
       messagesRef,
       where("matchId", "==", matchId),
-      orderBy("timestamp", "asc")
+      orderBy("timestamp", "asc"),
     );
 
     const unsubscribe = onSnapshot(
@@ -113,13 +113,13 @@ export function subscribeToMessages(
             ({
               id: doc.id,
               ...doc.data(),
-            }) as Message
+            }) as Message,
         );
         callback(messages);
       },
       (error) => {
         console.error("Error in messages subscription:", error);
-      }
+      },
     );
 
     return unsubscribe;
@@ -132,7 +132,7 @@ export function subscribeToMessages(
 // Mark messages as read
 export async function markMessagesAsRead(
   matchId: string,
-  userId: string
+  userId: string,
 ): Promise<void> {
   try {
     const messagesRef = collection(db, "messages");
@@ -140,13 +140,13 @@ export async function markMessagesAsRead(
       messagesRef,
       where("matchId", "==", matchId),
       where("receiverId", "==", userId),
-      where("read", "==", false)
+      where("read", "==", false),
     );
 
     const messagesSnapshot = await getDocs(messagesQuery);
 
     const updatePromises = messagesSnapshot.docs.map((docSnapshot) =>
-      updateDoc(doc(db, "messages", docSnapshot.id), { read: true })
+      updateDoc(doc(db, "messages", docSnapshot.id), { read: true }),
     );
 
     await Promise.all(updatePromises);
@@ -159,7 +159,7 @@ export async function markMessagesAsRead(
 // Get unread message count for a match
 export async function getUnreadCount(
   matchId: string,
-  userId: string
+  userId: string,
 ): Promise<number> {
   try {
     const messagesRef = collection(db, "messages");
@@ -167,7 +167,7 @@ export async function getUnreadCount(
       messagesRef,
       where("matchId", "==", matchId),
       where("receiverId", "==", userId),
-      where("read", "==", false)
+      where("read", "==", false),
     );
 
     const messagesSnapshot = await getDocs(messagesQuery);
@@ -181,7 +181,7 @@ export async function getUnreadCount(
 // Get conversations (matches with last message info)
 export async function getConversations(
   userId: string,
-  matchIds: string[]
+  matchIds: string[],
 ): Promise<Conversation[]> {
   try {
     const conversations: Conversation[] = [];
@@ -192,7 +192,7 @@ export async function getConversations(
         messagesRef,
         where("matchId", "==", matchId),
         orderBy("timestamp", "desc"),
-        limit(1)
+        limit(1),
       );
 
       const messagesSnapshot = await getDocs(messagesQuery);

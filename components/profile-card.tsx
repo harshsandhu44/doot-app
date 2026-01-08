@@ -26,7 +26,7 @@ export function ProfileCard({
     <Card style={styles.card}>
       <PhotoCarousel
         photos={profile.profile.photos}
-        height={SCREEN_HEIGHT * 0.6}
+        height={SCREEN_HEIGHT * 0.4}
       />
 
       <Card.Content style={styles.content}>
@@ -92,7 +92,6 @@ export function ProfileCard({
 
 const styles = StyleSheet.create({
   card: {
-    width: SCREEN_WIDTH - 32,
     marginHorizontal: 16,
     borderRadius: 16,
     overflow: "hidden",

@@ -34,6 +34,8 @@ export default function MatchesScreen() {
       ]);
 
       setRecentMatches(recent);
+      console.info("[RECENT MATCHES]", recent);
+      console.info("[ALL MATCHES]", all);
       // Filter out recent matches from all matches
       const recentIds = new Set(recent.map((m) => m.id));
       setAllMatches(all.filter((m) => !recentIds.has(m.id)));

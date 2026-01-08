@@ -30,7 +30,7 @@ function RootLayoutNav() {
         setCheckingOnboarding(true);
         try {
           const profile = await getUserProfile(user.uid);
-          
+
           if (!profile || !profile.metadata.onboardingCompleted) {
             // User needs to complete onboarding
             if (!inOnboardingGroup) {
@@ -66,6 +66,14 @@ function RootLayoutNav() {
       <Stack.Screen name="(auth)/login" />
       <Stack.Screen name="(auth)/signup" />
       <Stack.Screen name="(onboarding)" />
+      <Stack.Screen
+        name="settings"
+        options={{
+          headerShown: true,
+          headerTitle: "Settings",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
     </Stack>
   );
 }

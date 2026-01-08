@@ -29,6 +29,7 @@ export default function SwipeScreen() {
       setLoading(true);
       setError(null);
       const fetchedProfiles = await fetchProfiles(user.uid, 10);
+      console.info("[PROFILES]", fetchedProfiles);
       setProfiles(fetchedProfiles);
       setCurrentIndex(0);
     } catch (err) {

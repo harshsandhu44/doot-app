@@ -58,7 +58,7 @@ export default function ProfileScreen() {
   };
 
   const handleSettings = () => {
-    router.push("/settings" as any);
+    router.push("/settings");
   };
 
   if (loading) {

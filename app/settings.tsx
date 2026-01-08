@@ -7,23 +7,21 @@ import {
   List,
   Divider,
   ActivityIndicator,
-  IconButton,
   Dialog,
   Portal,
   Button,
 } from "react-native-paper";
 import { useAuth } from "../contexts/auth-context";
-import { useRouter, Stack } from "expo-router";
+import { useRouter } from "expo-router";
 import { getUserProfile, updatePreferences } from "../services/user";
 import { UserProfile } from "../models/user";
 import Slider from "@react-native-community/slider";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
   const theme = useTheme();
   const router = useRouter();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showPreferencesDialog, setShowPreferencesDialog] = useState(false);
@@ -81,7 +79,8 @@ export default function SettingsScreen() {
       console.error("Error updating preferences:", err);
       setShowPreferencesDialog(false);
       setErrorMessage(
-        err.message || "Failed to update preferences. Please complete your profile first."
+        err.message ||
+          "Failed to update preferences. Please complete your profile first.",
       );
       setShowErrorDialog(true);
     }
@@ -101,14 +100,6 @@ export default function SettingsScreen() {
   if (loading) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            title: "Settings",
-            headerLeft: () => (
-              <IconButton icon="arrow-left" onPress={() => router.back()} />
-            ),
-          }}
-        />
         <Surface
           style={[
             styles.container,
@@ -124,15 +115,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <SafeAreaView>
-      <Stack.Screen
-        options={{
-          title: "Settings",
-          headerLeft: () => (
-            <IconButton icon="arrow-left" onPress={() => router.back()} />
-          ),
-        }}
-      />
+    <>
       <ScrollView>
         <List.Section>
           <List.Subheader>Account</List.Subheader>
@@ -147,8 +130,19 @@ export default function SettingsScreen() {
         <List.Section>
           <List.Subheader>Discovery Preferences</List.Subheader>
           {profileIncomplete && (
-            <View style={{ padding: 16, backgroundColor: theme.colors.errorContainer, marginHorizontal: 16, borderRadius: 8, marginBottom: 8 }}>
-              <Text variant="bodyMedium" style={{ color: theme.colors.onErrorContainer }}>
+            <View
+              style={{
+                padding: 16,
+                backgroundColor: theme.colors.errorContainer,
+                marginHorizontal: 16,
+                borderRadius: 8,
+                marginBottom: 8,
+              }}
+            >
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.onErrorContainer }}
+              >
                 Complete your profile to edit preferences
               </Text>
             </View>
@@ -167,7 +161,9 @@ export default function SettingsScreen() {
             left={(props) => <List.Icon {...props} icon="gender-male-female" />}
             onPress={() => {
               if (profileIncomplete) {
-                setErrorMessage("Please complete your profile before editing preferences.");
+                setErrorMessage(
+                  "Please complete your profile before editing preferences.",
+                );
                 setShowErrorDialog(true);
               } else {
                 setShowPreferencesDialog(true);
@@ -185,7 +181,9 @@ export default function SettingsScreen() {
             left={(props) => <List.Icon {...props} icon="account-clock" />}
             onPress={() => {
               if (profileIncomplete) {
-                setErrorMessage("Please complete your profile before editing preferences.");
+                setErrorMessage(
+                  "Please complete your profile before editing preferences.",
+                );
                 setShowErrorDialog(true);
               } else {
                 setShowPreferencesDialog(true);
@@ -203,7 +201,9 @@ export default function SettingsScreen() {
             left={(props) => <List.Icon {...props} icon="map-marker-radius" />}
             onPress={() => {
               if (profileIncomplete) {
-                setErrorMessage("Please complete your profile before editing preferences.");
+                setErrorMessage(
+                  "Please complete your profile before editing preferences.",
+                );
                 setShowErrorDialog(true);
               } else {
                 setShowPreferencesDialog(true);
@@ -369,13 +369,20 @@ export default function SettingsScreen() {
             <Button onPress={handleSavePreferences}>Save</Button>
           </Dialog.Actions>
         </Dialog>
-        <Dialog visible={showErrorDialog} onDismiss={() => setShowErrorDialog(false)}>
+        <Dialog
+          visible={showErrorDialog}
+          onDismiss={() => setShowErrorDialog(false)}
+        >
           <Dialog.Title>Error</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium">{errorMessage}</Text>
             {profileIncomplete && (
-              <Text variant="bodySmall" style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
-                It looks like you haven't completed your profile yet. Please complete the onboarding to use all features.
+              <Text
+                variant="bodySmall"
+                style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}
+              >
+                It looks like you haven&apos;t completed your profile yet.
+                Please complete the onboarding to use all features.
               </Text>
             )}
           </Dialog.Content>
@@ -384,7 +391,7 @@ export default function SettingsScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </SafeAreaView>
+    </>
   );
 }
 

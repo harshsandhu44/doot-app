@@ -31,7 +31,7 @@ export async function getMatches(userId: string): Promise<Match[]> {
     const matchesQuery = query(
       matchesRef,
       where("users", "array-contains", userId),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
     );
 
     const matchesSnapshot = await getDocs(matchesQuery);
@@ -43,9 +43,7 @@ export async function getMatches(userId: string): Promise<Match[]> {
       const otherUserId = matchData.users.find((id: string) => id !== userId);
 
       if (otherUserId) {
-        const otherUserDoc = await getDoc(
-          doc(db, "userProfiles", otherUserId)
-        );
+        const otherUserDoc = await getDoc(doc(db, "users", otherUserId));
 
         if (otherUserDoc.exists()) {
           matches.push({
@@ -69,7 +67,7 @@ export async function getMatches(userId: string): Promise<Match[]> {
 // Get a specific match by ID
 export async function getMatchById(
   matchId: string,
-  currentUserId: string
+  currentUserId: string,
 ): Promise<Match | null> {
   try {
     const matchDoc = await getDoc(doc(db, "matches", matchId));
@@ -80,14 +78,14 @@ export async function getMatchById(
 
     const matchData = matchDoc.data();
     const otherUserId = matchData.users.find(
-      (id: string) => id !== currentUserId
+      (id: string) => id !== currentUserId,
     );
 
     if (!otherUserId) {
       return null;
     }
 
-    const otherUserDoc = await getDoc(doc(db, "userProfiles", otherUserId));
+    const otherUserDoc = await getDoc(doc(db, "users", otherUserId));
 
     if (!otherUserDoc.exists()) {
       return null;
@@ -111,11 +109,11 @@ export async function getRecentMatches(userId: string): Promise<Match[]> {
   try {
     const allMatches = await getMatches(userId);
     const oneDayAgo = Timestamp.fromDate(
-      new Date(Date.now() - 24 * 60 * 60 * 1000)
+      new Date(Date.now() - 24 * 60 * 60 * 1000),
     );
 
     return allMatches.filter(
-      (match) => match.createdAt.seconds > oneDayAgo.seconds
+      (match) => match.createdAt.seconds > oneDayAgo.seconds,
     );
   } catch (error) {
     console.error("Error fetching recent matches:", error);
