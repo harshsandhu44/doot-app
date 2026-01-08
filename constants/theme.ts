@@ -1,4 +1,5 @@
 import { TextStyle } from 'react-native';
+import { MD3LightTheme, MD3DarkTheme, MD3Theme } from 'react-native-paper';
 
 export const COLORS = {
   primary: '#FF6B6B',
@@ -12,6 +13,17 @@ export const COLORS = {
   success: '#00B894',
   white: '#FFFFFF',
   black: '#000000',
+  gray: {
+    100: '#F7F7F7',
+    200: '#E2E8F0',
+    300: '#CBD5E0',
+    400: '#A0AEC0',
+    500: '#718096',
+    600: '#4A5568',
+    700: '#2D3748',
+    800: '#1A202C',
+    900: '#171923',
+  }
 };
 
 export const SPACING = {
@@ -103,4 +115,55 @@ export const THEME = {
   borderRadius: BORDER_RADIUS,
   shadows: SHADOWS,
   typography: TYPOGRAPHY,
+};
+
+// React Native Paper Theme Integration
+export const paperLightTheme: MD3Theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: COLORS.primary,
+    onPrimary: COLORS.white,
+    secondary: COLORS.secondary,
+    onSecondary: COLORS.white,
+    background: COLORS.background,
+    onBackground: COLORS.text,
+    surface: COLORS.surface,
+    onSurface: COLORS.text,
+    surfaceVariant: COLORS.gray[100],
+    onSurfaceVariant: COLORS.textSecondary,
+    error: COLORS.error,
+    onError: COLORS.white,
+    outline: COLORS.border,
+    outlineVariant: COLORS.gray[300],
+    elevation: {
+      level0: 'transparent',
+      level1: COLORS.white,
+      level2: COLORS.surface,
+      level3: COLORS.surface,
+      level4: COLORS.surface,
+      level5: COLORS.surface,
+    },
+  },
+};
+
+export const paperDarkTheme: MD3Theme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: COLORS.primary,
+    onPrimary: COLORS.white,
+    secondary: COLORS.secondary,
+    onSecondary: COLORS.white,
+    background: COLORS.black,
+    onBackground: COLORS.white,
+    surface: COLORS.gray[900],
+    onSurface: COLORS.white,
+    surfaceVariant: COLORS.gray[800],
+    onSurfaceVariant: COLORS.gray[400],
+    error: COLORS.error,
+    onError: COLORS.white,
+    outline: COLORS.gray[700],
+    outlineVariant: COLORS.gray[600],
+  },
 };
