@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Platform } from "react-native";
 import { Text, ActivityIndicator } from "react-native-paper";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import { Image } from "expo-image";

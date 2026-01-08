@@ -19,7 +19,7 @@ export default function Step4() {
   const validateAndNext = () => {
     updateData({
       preferences: {
-        lookingFor,
+        lookingFor: lookingFor as "male" | "female" | "everyone",
         ageRange: { min: ageMin, max: ageMax },
         distanceRadius,
       },

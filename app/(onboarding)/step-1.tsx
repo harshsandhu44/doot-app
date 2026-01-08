@@ -38,7 +38,7 @@ export default function Step1() {
     if (age < 18) return setError("You must be at least 18 years old");
     if (!gender) return setError("Please select your gender");
 
-    updateData({ name, dateOfBirth, gender });
+    updateData({ name, dateOfBirth, gender: gender as "male" | "female" | "other" });
     router.push("/(onboarding)/step-2");
   };
 
