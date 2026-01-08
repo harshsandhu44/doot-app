@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -38,30 +38,29 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!matchId || !user?.uid) return;
 
+    const loadMatchData = async () => {
+      try {
+        setLoading(true);
+        const match = await getMatchById(matchId, user.uid!);
+        if (match?.otherUser) {
+          setOtherUser(match.otherUser);
+        }
+      } catch (err) {
+        console.error("Error loading match data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadMatchData();
 
     const unsubscribe = subscribeToMessages(matchId, (newMessages) => {
       setMessages(newMessages);
-      markMessagesAsRead(matchId, user.uid);
+      markMessagesAsRead(matchId, user.uid!);
     });
 
     return () => unsubscribe();
   }, [matchId, user?.uid]);
-
-  const loadMatchData = async () => {
-    if (!matchId || !user?.uid) return;
-    try {
-      setLoading(true);
-      const match = await getMatchById(matchId, user.uid);
-      if (match?.otherUser) {
-        setOtherUser(match.otherUser);
-      }
-    } catch (err) {
-      console.error("Error loading match data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSend = async () => {
     if (!messageText.trim() || !user?.uid || !matchId || !otherUser) return;

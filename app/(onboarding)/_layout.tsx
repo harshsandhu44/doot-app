@@ -1,7 +1,5 @@
-import React from "react";
 import { Stack, usePathname, useRouter } from "expo-router";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { Text } from "react-native-paper";
 import { OnboardingProvider } from "../../contexts/onboarding-context";
 import { ProgressBar } from "../../components/progress-bar";
 import { COLORS, SPACING, TYPOGRAPHY } from "../../constants/theme";
@@ -25,8 +23,6 @@ export default function OnboardingLayout() {
   const pathname = usePathname();
   const stepMatch = pathname.match(/step-(\d+)/);
   const currentStep = stepMatch ? parseInt(stepMatch[1], 10) : 1;
-
-  const isOptional = currentStep === 4 || currentStep === 5; // Example optional steps
 
   return (
     <OnboardingProvider>

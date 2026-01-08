@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Platform } from "react-native";
 import { Text, ActivityIndicator } from "react-native-paper";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
-import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { PhotoCarousel } from "../../components/photo-carousel";
 import { InterestChip } from "../../components/interest-chip";
@@ -11,7 +10,7 @@ import { getUserProfile } from "../../services/user";
 import { UserProfile } from "../../models/user";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../../constants/theme";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function ViewProfileScreen() {
   const router = useRouter();

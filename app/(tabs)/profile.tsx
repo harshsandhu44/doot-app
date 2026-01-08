@@ -9,7 +9,7 @@ import { InterestChip } from "../../components/interest-chip";
 import { Button } from "../../components/button";
 import { getUserProfile } from "../../services/user";
 import { UserProfile } from "../../models/user";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../../constants/theme";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const PHOTO_SIZE = (SCREEN_WIDTH - SPACING.md * 2 - SPACING.sm * 2) / 3;

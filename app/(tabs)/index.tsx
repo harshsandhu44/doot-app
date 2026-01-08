@@ -7,7 +7,7 @@ import { EmptyState } from "../../components/empty-state";
 import { fetchProfiles, recordSwipe } from "../../services/swipe";
 import { UserProfile } from "../../models/user";
 import * as Haptics from "expo-haptics";
-import { COLORS, SPACING, TYPOGRAPHY, SHADOWS, BORDER_RADIUS } from "../../constants/theme";
+import { COLORS, SPACING, TYPOGRAPHY, SHADOWS } from "../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { 
   useSharedValue, 
@@ -27,7 +27,6 @@ export default function SwipeScreen() {
   const [profiles, setProfiles] = useState<(UserProfile & { distance: number })[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -37,13 +36,11 @@ export default function SwipeScreen() {
 
     try {
       setLoading(true);
-      setError(null);
       const fetchedProfiles = await fetchProfiles(user.uid, 10);
       setProfiles(fetchedProfiles);
       setCurrentIndex(0);
     } catch (err) {
       console.error("Error loading profiles:", err);
-      setError("Failed to load profiles. Please try again.");
     } finally {
       setLoading(false);
     }
