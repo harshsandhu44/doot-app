@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { ActivityIndicator, Text } from "react-native-paper";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/auth-context";
 import { ChatBubble } from "../../components/chat-bubble";
 import {
@@ -22,7 +22,12 @@ import {
 } from "../../services/messages";
 import { getMatchById } from "../../services/matches";
 import { UserProfile } from "../../models/user";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+  BORDER_RADIUS,
+} from "../../constants/theme";
 
 export default function ChatScreen() {
   const { user } = useAuth();
@@ -80,7 +85,7 @@ export default function ChatScreen() {
   const formatTimestamp = (timestamp: any): string => {
     if (!timestamp) return "";
     const date = timestamp.toDate();
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   const renderDateSeparator = (date: Date) => {
@@ -90,7 +95,7 @@ export default function ChatScreen() {
     yesterday.setDate(now.getDate() - 1);
     const isYesterday = date.toDateString() === yesterday.toDateString();
 
-    let label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    let label = date.toLocaleDateString([], { month: "short", day: "numeric" });
     if (isToday) label = "Today";
     if (isYesterday) label = "Yesterday";
 
@@ -117,12 +122,16 @@ export default function ChatScreen() {
         options={{
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.headerProfile}
-                onPress={() => router.push(`/profile/${otherUser.uid}` as any)}
+                onPress={() => router.push(`/profile/${otherUser.uid}`)}
               >
                 <Image
-                  source={{ uri: otherUser.profile.photos?.[0] || 'https://via.placeholder.com/150' }}
+                  source={{
+                    uri:
+                      otherUser.profile.photos?.[0] ||
+                      "https://placehold.harshsandhu.com/api/img?w=36&h=36",
+                  }}
                   style={styles.headerAvatar}
                 />
                 <Text style={styles.headerName}>{otherUser.profile.name}</Text>
@@ -130,8 +139,8 @@ export default function ChatScreen() {
             </View>
           ),
           headerRight: () => (
-            <TouchableOpacity style={styles.headerMenu}>
-              <Ionicons name="ellipsis-vertical" size={24} color={COLORS.text} />
+            <TouchableOpacity>
+              <MaterialIcons name="more-vert" size={36} color={COLORS.text} />
             </TouchableOpacity>
           ),
         }}
@@ -147,12 +156,16 @@ export default function ChatScreen() {
           data={messages}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => {
-            const showDateSeparator = index === 0 || 
-              (messages[index-1].timestamp?.toDate().toDateString() !== item.timestamp?.toDate().toDateString());
-            
+            const showDateSeparator =
+              index === 0 ||
+              messages[index - 1].timestamp?.toDate().toDateString() !==
+                item.timestamp?.toDate().toDateString();
+
             return (
               <View>
-                {showDateSeparator && item.timestamp && renderDateSeparator(item.timestamp.toDate())}
+                {showDateSeparator &&
+                  item.timestamp &&
+                  renderDateSeparator(item.timestamp.toDate())}
                 <ChatBubble
                   message={item.text}
                   timestamp={formatTimestamp(item.timestamp)}
@@ -163,14 +176,16 @@ export default function ChatScreen() {
             );
           }}
           contentContainerStyle={styles.messagesList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={() =>
+            flatListRef.current?.scrollToEnd({ animated: true })
+          }
         />
 
         <View style={styles.inputBar}>
           <TouchableOpacity style={styles.plusButton}>
-            <Ionicons name="add" size={28} color={COLORS.textSecondary} />
+            <MaterialIcons name="add" size={28} color={COLORS.textSecondary} />
           </TouchableOpacity>
-          
+
           <TextInput
             placeholder="Type a message..."
             value={messageText}
@@ -180,18 +195,22 @@ export default function ChatScreen() {
             placeholderTextColor={COLORS.textSecondary}
           />
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleSend}
             disabled={!messageText.trim() || sending}
             style={[
               styles.sendButton,
-              { backgroundColor: messageText.trim() ? COLORS.primary : COLORS.border }
+              {
+                backgroundColor: messageText.trim()
+                  ? COLORS.primary
+                  : COLORS.border,
+              },
             ]}
           >
-            <Ionicons 
-              name="send" 
-              size={20} 
-              color={messageText.trim() ? COLORS.white : COLORS.textSecondary} 
+            <MaterialIcons
+              name="send"
+              size={20}
+              color={messageText.trim() ? COLORS.white : COLORS.textSecondary}
             />
           </TouchableOpacity>
         </View>
@@ -212,12 +231,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   headerProfile: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: SPACING.sm,
   },
   headerAvatar: {
@@ -229,14 +248,11 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.heading,
     fontSize: 16,
   },
-  headerMenu: {
-    marginRight: SPACING.sm,
-  },
   messagesList: {
     paddingVertical: SPACING.md,
   },
   dateSeparator: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: SPACING.md,
   },
   dateSeparatorText: {
@@ -248,8 +264,8 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.small,
   },
   inputBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: SPACING.sm,
     paddingHorizontal: SPACING.md,
     backgroundColor: COLORS.white,
@@ -260,8 +276,8 @@ const styles = StyleSheet.create({
   plusButton: {
     width: 32,
     height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     flex: 1,
@@ -274,7 +290,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
+
