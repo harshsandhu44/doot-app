@@ -5,10 +5,9 @@ import {
   useTheme,
   ActivityIndicator,
   Text,
-  IconButton,
   Divider,
 } from "react-native-paper";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useLocalSearchParams, Stack } from "expo-router";
 import { PhotoCarousel } from "../../components/photo-carousel";
 import { InterestTag } from "../../components/interest-tag";
 import { getUserProfile } from "../../services/user";
@@ -16,7 +15,6 @@ import { UserProfile } from "../../models/user";
 
 export default function ViewProfileScreen() {
   const theme = useTheme();
-  const router = useRouter();
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,9 +47,6 @@ export default function ViewProfileScreen() {
         <Stack.Screen
           options={{
             title: "Profile",
-            headerLeft: () => (
-              <IconButton icon="arrow-left" onPress={() => router.back()} />
-            ),
           }}
         />
         <Surface
@@ -74,9 +69,6 @@ export default function ViewProfileScreen() {
         <Stack.Screen
           options={{
             title: "Profile",
-            headerLeft: () => (
-              <IconButton icon="arrow-left" onPress={() => router.back()} />
-            ),
           }}
         />
         <Surface
@@ -100,9 +92,6 @@ export default function ViewProfileScreen() {
       <Stack.Screen
         options={{
           title: userProfile.profile.name,
-          headerLeft: () => (
-            <IconButton icon="arrow-left" onPress={() => router.back()} />
-          ),
         }}
       />
       <Surface

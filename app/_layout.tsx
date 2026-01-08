@@ -61,7 +61,7 @@ function RootLayoutNav() {
   }, [user, loading, segments]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, headerTitleAlign: "center" }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(auth)/login" />
       <Stack.Screen name="(auth)/signup" />
@@ -71,6 +71,23 @@ function RootLayoutNav() {
         options={{
           headerShown: true,
           headerTitle: "Settings",
+          headerBackVisible: true,
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
+        name="chat/[matchId]"
+        options={{
+          headerShown: true,
+          headerBackVisible: true,
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
+        name="profile/[userId]"
+        options={{
+          headerShown: true,
+          headerBackVisible: true,
           headerBackButtonDisplayMode: "minimal",
         }}
       />

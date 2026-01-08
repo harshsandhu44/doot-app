@@ -24,7 +24,7 @@ export function ChatBubble({
           styles.bubble,
           isSent
             ? {
-                backgroundColor: theme.colors.primaryContainer,
+                backgroundColor: theme.colors.primary,
                 alignSelf: "flex-end",
               }
             : {
@@ -32,7 +32,7 @@ export function ChatBubble({
                 alignSelf: "flex-start",
               },
         ]}
-        elevation={0}
+        elevation={1}
       >
         <Text
           variant="bodyMedium"
@@ -40,7 +40,7 @@ export function ChatBubble({
             styles.messageText,
             {
               color: isSent
-                ? theme.colors.onPrimaryContainer
+                ? theme.colors.onPrimary
                 : theme.colors.onSurfaceVariant,
             },
           ]}
@@ -54,9 +54,9 @@ export function ChatBubble({
               styles.timestamp,
               {
                 color: isSent
-                  ? theme.colors.onPrimaryContainer
+                  ? theme.colors.onPrimary
                   : theme.colors.onSurfaceVariant,
-                opacity: 0.7,
+                opacity: 0.8,
               },
             ]}
           >
@@ -67,10 +67,10 @@ export function ChatBubble({
               variant="bodySmall"
               style={[
                 styles.readIndicator,
-                { color: theme.colors.onPrimaryContainer, opacity: 0.7 },
+                { color: theme.colors.onPrimary, opacity: 0.8 },
               ]}
             >
-              {isRead ? "Read" : "Sent"}
+              {isRead ? "✓✓" : "✓"}
             </Text>
           )}
         </View>
@@ -81,33 +81,34 @@ export function ChatBubble({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 4,
-    marginHorizontal: 12,
-    maxWidth: "75%",
+    marginVertical: 3,
+    marginHorizontal: 16,
+    maxWidth: "80%",
     alignSelf: "flex-start",
   },
   sentContainer: {
     alignSelf: "flex-end",
   },
   bubble: {
-    borderRadius: 16,
+    borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   messageText: {
-    lineHeight: 20,
+    lineHeight: 22,
+    fontSize: 15,
   },
   timestampContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     marginTop: 4,
+    gap: 4,
   },
   timestamp: {
     fontSize: 11,
   },
   readIndicator: {
-    fontSize: 11,
-    marginLeft: 8,
+    fontSize: 12,
   },
 });

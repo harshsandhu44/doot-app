@@ -7,6 +7,7 @@ import {
   Platform,
   TouchableOpacity,
 } from "react-native";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import {
   Surface,
   useTheme,
@@ -17,7 +18,6 @@ import {
   Avatar,
 } from "react-native-paper";
 import { useAuth } from "../../contexts/auth-context";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { ChatBubble } from "../../components/chat-bubble";
 import {
   sendMessage,
@@ -144,9 +144,6 @@ export default function ChatScreen() {
       <Stack.Screen
         options={{
           title: otherUser.profile.name,
-          headerLeft: () => (
-            <IconButton icon="arrow-left" onPress={() => router.back()} />
-          ),
           headerRight: () => (
             <TouchableOpacity onPress={handleProfilePress}>
               {otherUser.profile.photos &&
@@ -154,14 +151,12 @@ export default function ChatScreen() {
                 <Avatar.Image
                   size={36}
                   source={{ uri: otherUser.profile.photos[0] }}
-                  style={{ marginRight: 12 }}
                 />
               ) : (
                 <Avatar.Icon
                   size={36}
                   icon="account"
                   style={{
-                    marginRight: 12,
                     backgroundColor: theme.colors.surfaceVariant,
                   }}
                 />
@@ -219,31 +214,44 @@ export default function ChatScreen() {
           <View
             style={[
               styles.inputContainer,
-              { backgroundColor: theme.colors.surface },
+              {
+                backgroundColor: theme.colors.surface,
+                borderTopColor: theme.colors.outlineVariant,
+              },
             ]}
           >
-            <TextInput
-              mode="outlined"
-              placeholder="Type a message..."
-              value={messageText}
-              onChangeText={setMessageText}
-              style={styles.input}
-              multiline
-              maxLength={500}
-              onSubmitEditing={handleSend}
-              disabled={sending}
-            />
-            <IconButton
-              icon="send"
-              size={24}
-              onPress={handleSend}
-              disabled={!messageText.trim() || sending}
-              iconColor={
-                messageText.trim() && !sending
-                  ? theme.colors.primary
-                  : theme.colors.onSurfaceVariant
-              }
-            />
+            <View style={styles.inputWrapper}>
+              <TextInput
+                mode="outlined"
+                placeholder="Message..."
+                value={messageText}
+                onChangeText={setMessageText}
+                style={styles.input}
+                multiline
+                maxLength={500}
+                onSubmitEditing={handleSend}
+                disabled={sending}
+                outlineStyle={styles.inputOutline}
+              />
+              <IconButton
+                icon="send"
+                size={24}
+                mode="contained"
+                containerColor={
+                  messageText.trim() && !sending
+                    ? theme.colors.primary
+                    : theme.colors.surfaceVariant
+                }
+                iconColor={
+                  messageText.trim() && !sending
+                    ? theme.colors.onPrimary
+                    : theme.colors.onSurfaceVariant
+                }
+                onPress={handleSend}
+                disabled={!messageText.trim() || sending}
+                style={styles.sendButton}
+              />
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Surface>
@@ -268,19 +276,28 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   messagesList: {
-    paddingVertical: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   inputContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  inputWrapper: {
     flexDirection: "row",
     alignItems: "flex-end",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
+    gap: 8,
   },
   input: {
     flex: 1,
-    marginRight: 8,
     maxHeight: 100,
+    backgroundColor: "transparent",
+  },
+  inputOutline: {
+    borderRadius: 24,
+  },
+  sendButton: {
+    margin: 0,
   },
 });
