@@ -49,6 +49,7 @@ export interface UserProfile {
     lastActive: Timestamp;
     profileComplete: boolean;
     onboardingCompleted: boolean;
+    pushToken?: string | null;
   };
 }
 
