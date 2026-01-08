@@ -12,10 +12,12 @@ import {
 import { Text } from "react-native-paper";
 import { useRouter, Stack } from "expo-router";
 import { useOnboarding } from "../../contexts/onboarding-context";
+import { useAuth } from "../../contexts/auth-context";
 import * as ImagePicker from "expo-image-picker";
 import { Button } from "../../components/button";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { uploadProfileImage } from "../../services/storage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_SPACING = SPACING.md;
@@ -24,8 +26,10 @@ const PHOTO_SIZE = (SCREEN_WIDTH - SPACING.lg * 2 - GRID_SPACING) / 2;
 export default function Step2() {
   const router = useRouter();
   const { data, updateData } = useOnboarding();
+  const { user } = useAuth();
 
   const [photos, setPhotos] = useState<string[]>(data.photos || []);
+  const [uploading, setUploading] = useState(false);
 
   const pickImage = async () => {
     if (photos.length >= 6) {
@@ -55,9 +59,31 @@ export default function Step2() {
     setPhotos(photos.filter((_, i) => i !== index));
   };
 
-  const validateAndNext = () => {
-    updateData({ photos });
-    router.push("/(onboarding)/step-3");
+  const validateAndNext = async () => {
+    if (!user) {
+      Alert.alert("Error", "You must be logged in to upload photos");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const uploadedUrls = await Promise.all(
+        photos.map(async (photoUri) => {
+          // If it's already a remote URL, return it
+          if (photoUri.startsWith("http")) return photoUri;
+          // Otherwise upload it
+          return await uploadProfileImage(user.uid, photoUri);
+        })
+      );
+
+      updateData({ photos: uploadedUrls });
+      router.push("/(onboarding)/step-3");
+    } catch (error) {
+      console.error("Error uploading photos:", error);
+      Alert.alert("Upload Failed", "Failed to upload photos. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSkip = () => {
@@ -72,7 +98,7 @@ export default function Step2() {
       <Stack.Screen 
         options={{
           headerRight: () => (
-            <TouchableOpacity onPress={handleSkip} style={styles.skipHeaderButton}>
+            <TouchableOpacity onPress={handleSkip} style={styles.skipHeaderButton} disabled={uploading}>
               <Text style={styles.skipHeaderText}>Skip</Text>
             </TouchableOpacity>
           )
@@ -89,6 +115,7 @@ export default function Step2() {
               <TouchableOpacity
                 style={styles.removeButton}
                 onPress={() => removePhoto(index)}
+                disabled={uploading}
               >
                 <Ionicons name="close-circle" size={24} color={COLORS.error} />
               </TouchableOpacity>
@@ -100,6 +127,7 @@ export default function Step2() {
               key={`empty-${index}`}
               style={styles.addPhotoButton}
               onPress={pickImage}
+              disabled={uploading}
             >
               <Ionicons name="add" size={32} color={COLORS.border} />
             </TouchableOpacity>
@@ -116,9 +144,10 @@ export default function Step2() {
 
       <View style={styles.footer}>
         <Button
-          title="Continue"
+          title={uploading ? "Uploading..." : "Continue"}
           onPress={validateAndNext}
-          disabled={photos.length < 1}
+          disabled={photos.length < 1 || uploading}
+          loading={uploading}
         />
       </View>
     </View>
