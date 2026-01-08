@@ -5,232 +5,210 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-} from "react-native";
-import {
-  Text,
+  TouchableOpacity,
   TextInput,
-  Button,
-  Surface,
-  SegmentedButtons,
-  useTheme,
-} from "react-native-paper";
+} from "react-native";
+import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "../../contexts/onboarding-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Button } from "../../components/button";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function Step1() {
   const router = useRouter();
-  const theme = useTheme();
   const { data, updateData } = useOnboarding();
 
-  const [name, setName] = useState(data.name);
+  const [name, setName] = useState(data.name || "");
   const [dateOfBirth, setDateOfBirth] = useState<Date>(
     data.dateOfBirth || new Date(2000, 0, 1),
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [gender, setGender] = useState(data.gender);
+  const [gender, setGender] = useState(data.gender || "");
   const [error, setError] = useState("");
 
   const validateAndNext = () => {
     setError("");
-
-    if (!name.trim()) {
-      setError("Please enter your name");
-      return;
-    }
-
-    if (name.trim().length < 2) {
-      setError("Name must be at least 2 characters");
-      return;
-    }
-
-    if (!dateOfBirth) {
-      setError("Please select your date of birth");
-      return;
-    }
-
-    // Validate age (must be 18+)
+    if (!name.trim()) return setError("Please enter your name");
+    if (name.trim().length < 2) return setError("Name must be at least 2 characters");
+    
     const today = new Date();
     const age = today.getFullYear() - dateOfBirth.getFullYear();
-    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
-    const adjustedAge =
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())
-        ? age - 1
-        : age;
+    if (age < 18) return setError("You must be at least 18 years old");
+    if (!gender) return setError("Please select your gender");
 
-    if (adjustedAge < 18) {
-      setError("You must be at least 18 years old");
-      return;
-    }
-
-    if (adjustedAge > 100) {
-      setError("Please enter a valid date of birth");
-      return;
-    }
-
-    if (!gender) {
-      setError("Please select your gender");
-      return;
-    }
-
-    // Save data and navigate
     updateData({ name, dateOfBirth, gender });
     router.push("/(onboarding)/step-2");
   };
 
   const onDateChange = (_event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === "ios");
-    if (selectedDate) {
-      setDateOfBirth(selectedDate);
-    }
+    if (selectedDate) setDateOfBirth(selectedDate);
   };
 
   return (
-    <Surface
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.flex}
+        style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.content}>
-            <Text variant="headlineMedium" style={styles.title}>
-              Basic Info
-            </Text>
-            <Text
-              variant="bodyLarge"
-              style={[
-                styles.subtitle,
-                { color: theme.colors.onSurfaceVariant },
-              ]}
+          <Text style={styles.title}>What&apos;s your name?</Text>
+          <Text style={styles.subtitle}>Let&apos;s start with the basics</Text>
+
+          <View style={styles.form}>
+            <TextInput
+              placeholder="Enter your name"
+              value={name}
+              onChangeText={setName}
+              style={styles.input}
+              placeholderTextColor={COLORS.textSecondary}
+            />
+
+            <Text style={styles.label}>When is your birthday?</Text>
+            <TouchableOpacity 
+              style={styles.datePickerButton} 
+              onPress={() => setShowDatePicker(true)}
             >
-              Let&apos;s start with the basics
-            </Text>
+              <Ionicons name="calendar-outline" size={20} color={COLORS.primary} />
+              <Text style={styles.dateText}>{dateOfBirth.toLocaleDateString()}</Text>
+            </TouchableOpacity>
 
-            {error ? (
-              <Surface
-                style={[
-                  styles.errorContainer,
-                  { backgroundColor: theme.colors.errorContainer },
-                ]}
-              >
-                <Text style={{ color: theme.colors.onErrorContainer }}>
-                  {error}
-                </Text>
-              </Surface>
-            ) : null}
-
-            <View style={styles.form}>
-              <TextInput
-                mode="outlined"
-                label="Name"
-                value={name}
-                onChangeText={setName}
-                placeholder="Enter your name"
-                style={styles.input}
+            {showDatePicker && (
+              <DateTimePicker
+                value={dateOfBirth}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onDateChange}
+                maximumDate={new Date()}
               />
+            )}
 
-              <View style={styles.dateInputContainer}>
-                <Text variant="bodyLarge" style={styles.label}>
-                  Date of Birth
-                </Text>
-                <Button
-                  mode="outlined"
-                  onPress={() => setShowDatePicker(true)}
-                  style={styles.dateButton}
-                >
-                  {dateOfBirth.toLocaleDateString()}
-                </Button>
-              </View>
-
-              {showDatePicker && (
-                <DateTimePicker
-                  value={dateOfBirth}
-                  mode="date"
-                  display="spinner"
-                  onChange={onDateChange}
-                  maximumDate={new Date()}
-                  minimumDate={new Date(1920, 0, 1)}
-                />
-              )}
-
-              <View style={styles.genderContainer}>
-                <Text variant="bodyLarge" style={styles.label}>
-                  Gender
-                </Text>
-                <SegmentedButtons
-                  value={gender}
-                  onValueChange={setGender}
-                  buttons={[
-                    { value: "male", label: "Male" },
-                    { value: "female", label: "Female" },
-                    { value: "other", label: "Other" },
+            <Text style={styles.label}>Gender</Text>
+            <View style={styles.genderGrid}>
+              {['male', 'female', 'other'].map((g) => (
+                <TouchableOpacity
+                  key={g}
+                  style={[
+                    styles.genderButton,
+                    gender === g && styles.genderButtonSelected
                   ]}
-                />
-              </View>
-
-              <Button
-                mode="contained"
-                onPress={validateAndNext}
-                style={styles.button}
-              >
-                Next
-              </Button>
+                  onPress={() => setGender(g)}
+                >
+                  <Text style={[
+                    styles.genderButtonText,
+                    gender === g && styles.genderButtonTextSelected
+                  ]}>
+                    {g.charAt(0).toUpperCase() + g.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
         </ScrollView>
+
+        <View style={styles.footer}>
+          <Button
+            title="Continue"
+            onPress={validateAndNext}
+            disabled={!name || !gender}
+          />
+        </View>
       </KeyboardAvoidingView>
-    </Surface>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  flex: {
-    flex: 1,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
+    padding: SPACING.lg,
+    paddingBottom: 100,
   },
   title: {
-    marginBottom: 8,
-    marginTop: 16,
+    ...TYPOGRAPHY.title,
+    fontSize: 28,
+    marginBottom: SPACING.xs,
   },
   subtitle: {
-    marginBottom: 32,
-  },
-  errorContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xl,
   },
   form: {
-    gap: 24,
+    gap: SPACING.lg,
   },
   input: {
-    marginBottom: 8,
-  },
-  dateInputContainer: {
-    gap: 8,
+    height: 56,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: BORDER_RADIUS.medium,
+    paddingHorizontal: SPACING.md,
+    ...TYPOGRAPHY.body,
+    backgroundColor: COLORS.surface,
   },
   label: {
-    fontWeight: "600",
+    ...TYPOGRAPHY.heading,
+    fontSize: 16,
+    marginBottom: -SPACING.sm,
   },
-  dateButton: {
-    justifyContent: "center",
+  datePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 56,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: BORDER_RADIUS.medium,
+    paddingHorizontal: SPACING.md,
+    backgroundColor: COLORS.surface,
+    gap: SPACING.sm,
   },
-  genderContainer: {
-    gap: 8,
+  dateText: {
+    ...TYPOGRAPHY.body,
   },
-  button: {
-    marginTop: 16,
+  genderGrid: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  genderButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: BORDER_RADIUS.full,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+  },
+  genderButtonSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  genderButtonText: {
+    ...TYPOGRAPHY.body,
+    fontWeight: '500',
+  },
+  genderButtonTextSelected: {
+    color: COLORS.white,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: SPACING.lg,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    backgroundColor: COLORS.background,
+  },
+  errorText: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.error,
+    textAlign: 'center',
   },
 });

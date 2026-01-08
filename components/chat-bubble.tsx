@@ -1,6 +1,7 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Surface, Text, useTheme } from "react-native-paper";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Text } from 'react-native-paper';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../constants/theme';
 
 interface ChatBubbleProps {
   message: string;
@@ -15,100 +16,84 @@ export function ChatBubble({
   isSent,
   isRead = false,
 }: ChatBubbleProps) {
-  const theme = useTheme();
-
   return (
-    <View style={[styles.container, isSent && styles.sentContainer]}>
-      <Surface
+    <View style={[styles.container, isSent ? styles.sentContainer : styles.receivedContainer]}>
+      <View
         style={[
           styles.bubble,
-          isSent
-            ? {
-                backgroundColor: theme.colors.primary,
-                alignSelf: "flex-end",
-              }
-            : {
-                backgroundColor: theme.colors.surfaceVariant,
-                alignSelf: "flex-start",
-              },
+          isSent ? styles.sentBubble : styles.receivedBubble,
         ]}
-        elevation={1}
       >
         <Text
-          variant="bodyMedium"
           style={[
             styles.messageText,
-            {
-              color: isSent
-                ? theme.colors.onPrimary
-                : theme.colors.onSurfaceVariant,
-            },
+            { color: isSent ? COLORS.white : COLORS.text },
           ]}
         >
           {message}
         </Text>
-        <View style={styles.timestampContainer}>
-          <Text
-            variant="bodySmall"
-            style={[
-              styles.timestamp,
-              {
-                color: isSent
-                  ? theme.colors.onPrimary
-                  : theme.colors.onSurfaceVariant,
-                opacity: 0.8,
-              },
-            ]}
-          >
-            {timestamp}
+      </View>
+      <View style={[styles.timestampContainer, isSent ? styles.sentTimestamp : styles.receivedTimestamp]}>
+        <Text style={styles.timestamp}>
+          {timestamp}
+        </Text>
+        {isSent && (
+          <Text style={[styles.readIndicator, { color: isRead ? COLORS.secondary : COLORS.textSecondary }]}>
+            {isRead ? "Read" : "Sent"}
           </Text>
-          {isSent && (
-            <Text
-              variant="bodySmall"
-              style={[
-                styles.readIndicator,
-                { color: theme.colors.onPrimary, opacity: 0.8 },
-              ]}
-            >
-              {isRead ? "✓✓" : "✓"}
-            </Text>
-          )}
-        </View>
-      </Surface>
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 3,
-    marginHorizontal: 16,
-    maxWidth: "80%",
-    alignSelf: "flex-start",
+    marginVertical: SPACING.xs,
+    marginHorizontal: SPACING.md,
+    maxWidth: '80%',
   },
   sentContainer: {
-    alignSelf: "flex-end",
+    alignSelf: 'flex-end',
+  },
+  receivedContainer: {
+    alignSelf: 'flex-start',
   },
   bubble: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.large,
+  },
+  sentBubble: {
+    backgroundColor: COLORS.primary,
+    borderBottomRightRadius: 4,
+  },
+  receivedBubble: {
+    backgroundColor: COLORS.surface,
+    borderBottomLeftRadius: 4,
   },
   messageText: {
+    ...TYPOGRAPHY.body,
     lineHeight: 22,
-    fontSize: 15,
   },
   timestampContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    marginTop: 4,
+    flexDirection: 'row',
+    marginTop: 2,
     gap: 4,
   },
+  sentTimestamp: {
+    justifyContent: 'flex-end',
+  },
+  receivedTimestamp: {
+    justifyContent: 'flex-start',
+  },
   timestamp: {
-    fontSize: 11,
+    ...TYPOGRAPHY.small,
+    color: COLORS.textSecondary,
+    fontSize: 10,
   },
   readIndicator: {
-    fontSize: 12,
+    ...TYPOGRAPHY.small,
+    fontSize: 10,
   },
 });

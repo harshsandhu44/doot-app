@@ -6,25 +6,26 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Dimensions,
+  Platform,
 } from "react-native";
-import {
-  Text,
-  Button,
-  Surface,
-  useTheme,
-  IconButton,
-} from "react-native-paper";
+import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "../../contexts/onboarding-context";
 import * as ImagePicker from "expo-image-picker";
+import { Button } from "../../components/button";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const GRID_SPACING = SPACING.md;
+const PHOTO_SIZE = (SCREEN_WIDTH - SPACING.lg * 2 - GRID_SPACING) / 2;
 
 export default function Step2() {
   const router = useRouter();
-  const theme = useTheme();
   const { data, updateData } = useOnboarding();
 
-  const [photos, setPhotos] = useState<string[]>(data.photos);
-  const [error, setError] = useState("");
+  const [photos, setPhotos] = useState<string[]>(data.photos || []);
 
   const pickImage = async () => {
     if (photos.length >= 6) {
@@ -32,20 +33,14 @@ export default function Step2() {
       return;
     }
 
-    // Request permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
     if (status !== "granted") {
-      Alert.alert(
-        "Permission needed",
-        "Please grant photo library access to upload images"
-      );
+      Alert.alert("Permission needed", "Please grant photo library access to upload images");
       return;
     }
 
-    // Pick image
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images" as any,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [3, 4],
       quality: 0.8,
@@ -53,195 +48,142 @@ export default function Step2() {
 
     if (!result.canceled && result.assets[0]) {
       setPhotos([...photos, result.assets[0].uri]);
-      setError("");
     }
   };
 
   const removePhoto = (index: number) => {
-    const newPhotos = photos.filter((_, i) => i !== index);
-    setPhotos(newPhotos);
+    setPhotos(photos.filter((_, i) => i !== index));
   };
 
   const validateAndNext = () => {
-    setError("");
-
-    // Save data and navigate
     updateData({ photos });
     router.push("/(onboarding)/step-3");
   };
 
-  const handleSkip = () => {
-    setError("");
-    // Skip with empty photos array
-    updateData({ photos: [] });
-    router.push("/(onboarding)/step-3");
-  };
-
-  const goBack = () => {
-    router.back();
-  };
+  const emptySlots = 6 - photos.length;
 
   return (
-    <Surface style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text variant="headlineMedium" style={styles.title}>
-            Add Your Photos
-          </Text>
-          <Text
-            variant="bodyLarge"
-            style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}
-          >
-            Upload photos to showcase yourself (optional)
-          </Text>
+        <Text style={styles.title}>Add your best photos</Text>
+        <Text style={styles.subtitle}>Upload at least 2 photos to stand out</Text>
 
-          {error ? (
-            <Surface
-              style={[
-                styles.errorContainer,
-                { backgroundColor: theme.colors.errorContainer },
-              ]}
-            >
-              <Text style={{ color: theme.colors.onErrorContainer }}>
-                {error}
-              </Text>
-            </Surface>
-          ) : null}
-
-          <View style={styles.photosGrid}>
-            {photos.map((uri, index) => (
-              <View key={index} style={styles.photoContainer}>
-                <Image source={{ uri }} style={styles.photo} />
-                <IconButton
-                  icon="close-circle"
-                  size={24}
-                  style={styles.removeButton}
-                  iconColor={theme.colors.error}
-                  onPress={() => removePhoto(index)}
-                />
-              </View>
-            ))}
-
-            {photos.length < 6 && (
+        <View style={styles.grid}>
+          {photos.map((uri, index) => (
+            <View key={index} style={styles.photoContainer}>
+              <Image source={{ uri }} style={styles.photo} />
               <TouchableOpacity
-                style={[
-                  styles.addPhotoButton,
-                  { borderColor: theme.colors.outline },
-                ]}
-                onPress={pickImage}
+                style={styles.removeButton}
+                onPress={() => removePhoto(index)}
               >
-                <IconButton icon="plus" size={32} />
-                <Text variant="bodySmall">Add Photo</Text>
+                <Ionicons name="close-circle" size={24} color={COLORS.error} />
               </TouchableOpacity>
-            )}
-          </View>
+            </View>
+          ))}
 
-          <Text
-            variant="bodySmall"
-            style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}
-          >
-            {photos.length} of 6 photos (optional - you can add photos later)
+          {Array.from({ length: emptySlots }).map((_, index) => (
+            <TouchableOpacity
+              key={`empty-${index}`}
+              style={styles.addPhotoButton}
+              onPress={pickImage}
+            >
+              <Ionicons name="add" size={32} color={COLORS.border} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.tipContainer}>
+          <Ionicons name="bulb-outline" size={20} color={COLORS.secondary} />
+          <Text style={styles.tipText}>
+            Photos with good lighting and clear view of your face get more matches!
           </Text>
-
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="outlined"
-              onPress={goBack}
-              style={styles.backButton}
-            >
-              Back
-            </Button>
-            <Button
-              mode="outlined"
-              onPress={handleSkip}
-              style={styles.skipButton}
-            >
-              Skip
-            </Button>
-            <Button
-              mode="contained"
-              onPress={validateAndNext}
-              style={styles.nextButton}
-            >
-              Next
-            </Button>
-          </View>
         </View>
       </ScrollView>
-    </Surface>
+
+      <View style={styles.footer}>
+        <Button
+          title="Continue"
+          onPress={validateAndNext}
+          disabled={photos.length < 1}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
+    padding: SPACING.lg,
+    paddingBottom: 100,
   },
   title: {
-    marginBottom: 8,
-    marginTop: 16,
+    ...TYPOGRAPHY.title,
+    fontSize: 28,
+    marginBottom: SPACING.xs,
   },
   subtitle: {
-    marginBottom: 32,
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xl,
   },
-  errorContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  photosGrid: {
+  grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 16,
+    gap: GRID_SPACING,
   },
   photoContainer: {
-    position: "relative",
-    width: 100,
-    height: 130,
+    width: PHOTO_SIZE,
+    height: PHOTO_SIZE * 1.3,
+    borderRadius: BORDER_RADIUS.medium,
+    overflow: 'hidden',
+    position: 'relative',
   },
   photo: {
     width: "100%",
     height: "100%",
-    borderRadius: 8,
   },
   removeButton: {
     position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "white",
+    top: 4,
+    right: 4,
+    backgroundColor: COLORS.white,
     borderRadius: 12,
   },
   addPhotoButton: {
-    width: 100,
-    height: 130,
-    borderRadius: 8,
+    width: PHOTO_SIZE,
+    height: PHOTO_SIZE * 1.3,
+    borderRadius: BORDER_RADIUS.medium,
     borderWidth: 2,
     borderStyle: "dashed",
+    borderColor: COLORS.border,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: COLORS.surface,
   },
-  helperText: {
-    marginBottom: 24,
+  tipContainer: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.medium,
+    marginTop: SPACING.xl,
+    gap: SPACING.sm,
+    alignItems: 'center',
   },
-  buttonContainer: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: "auto",
-  },
-  backButton: {
+  tipText: {
+    ...TYPOGRAPHY.caption,
     flex: 1,
   },
-  skipButton: {
-    flex: 1,
-  },
-  nextButton: {
-    flex: 1,
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: SPACING.lg,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    backgroundColor: COLORS.background,
   },
 });

@@ -1,38 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Image } from "react-native";
-import {
-  Text,
-  Surface,
-  Button,
-  Card,
-  useTheme,
-  Dialog,
-  Portal,
-  ActivityIndicator,
-  IconButton,
-} from "react-native-paper";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { Text, ActivityIndicator, Portal, Dialog } from "react-native-paper";
+import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/auth-context";
-import { useRouter } from "expo-router";
-import { InterestTag } from "../../components/interest-tag";
+import { useRouter, Stack } from "expo-router";
+import { InterestChip } from "../../components/interest-chip";
+import { Button } from "../../components/button";
 import { getUserProfile } from "../../services/user";
 import { UserProfile } from "../../models/user";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../../constants/theme";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const PHOTO_SIZE = (SCREEN_WIDTH - SPACING.md * 2 - SPACING.sm * 2) / 3;
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const theme = useTheme();
-  const [visible, setVisible] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
 
-  useEffect(() => {
-    loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!user?.uid) return;
-
     try {
       setLoading(true);
       const profile = await getUserProfile(user.uid);
@@ -42,223 +32,312 @@ export default function ProfileScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.uid]);
 
-  const showDialog = () => setVisible(true);
-  const hideDialog = () => setVisible(false);
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      hideDialog();
+      setShowSignOutDialog(false);
       router.replace("/(auth)/login" as any);
     } catch {
-      hideDialog();
+      setShowSignOutDialog(false);
     }
-  };
-
-  const handleSettings = () => {
-    router.push("/settings");
   };
 
   if (loading) {
     return (
-      <Surface
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" />
-        </View>
-      </Surface>
+      <View style={styles.centerContent}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
     );
   }
 
+  const photos = userProfile?.profile.photos || [];
+  const emptyPhotosCount = 6 - photos.length;
+
   return (
-    <Surface
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Profile
-        </Text>
-        <IconButton icon="cog" onPress={handleSettings} />
-      </View>
+    <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerTitle: "Profile",
+          headerRight: () => (
+            <TouchableOpacity onPress={() => router.push("/settings" as any)}>
+              <Text style={styles.editButton}>Edit</Text>
+            </TouchableOpacity>
+          ),
+        }}
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {userProfile?.profile.photos &&
-          userProfile.profile.photos.length > 0 && (
-            <View style={styles.photosContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {userProfile.profile.photos.map((photo, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri: photo }}
-                    style={styles.photo}
-                    resizeMode="cover"
-                  />
-                ))}
-              </ScrollView>
-            </View>
-          )}
+        <View style={styles.photoSection}>
+          <View style={styles.avatarBorder}>
+            <Image
+              source={{ uri: photos[0] || 'https://via.placeholder.com/150' }}
+              style={styles.mainAvatar}
+            />
+            <TouchableOpacity style={styles.editIconContainer}>
+              <Ionicons name="camera" size={20} color={COLORS.white} />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.nameText}>
+            {userProfile?.profile.name}, {userProfile?.profile.age}
+          </Text>
+        </View>
 
-        <Card style={styles.card}>
-          <Card.Content>
-            <View style={styles.nameRow}>
-              <Text variant="headlineSmall" style={styles.name}>
-                {userProfile?.profile.name || user?.displayName || "User"}
-              </Text>
-              <Text
-                variant="titleMedium"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                {userProfile?.profile.age}
-              </Text>
-            </View>
+        <View style={styles.photoGridSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Photos</Text>
+            <Text style={styles.progressText}>{photos.length} of 6 photos</Text>
+          </View>
+          
+          <View style={styles.grid}>
+            {photos.map((photo, index) => (
+              <Image key={index} source={{ uri: photo }} style={styles.gridPhoto} />
+            ))}
+            {Array.from({ length: emptyPhotosCount }).map((_, index) => (
+              <TouchableOpacity key={`empty-${index}`} style={styles.emptyPhotoSlot}>
+                <Ionicons name="add" size={32} color={COLORS.border} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-            {userProfile?.profile.location && (
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                {userProfile.profile.location.city}
-              </Text>
-            )}
-          </Card.Content>
-        </Card>
+        <View style={styles.divider} />
 
-        {userProfile?.profile.bio && (
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text variant="titleMedium" style={styles.sectionTitle}>
-                About Me
-              </Text>
-              <Text variant="bodyMedium" style={{ marginTop: 8 }}>
-                {userProfile.profile.bio}
-              </Text>
-            </Card.Content>
-          </Card>
-        )}
-
-        {userProfile?.profile.interests &&
-          userProfile.profile.interests.length > 0 && (
-            <Card style={styles.card}>
-              <Card.Content>
-                <Text variant="titleMedium" style={styles.sectionTitle}>
-                  Interests
-                </Text>
-                <View style={styles.interestsContainer}>
-                  {userProfile.profile.interests.map((interest, index) => (
-                    <InterestTag key={index} interest={interest} selected />
-                  ))}
-                </View>
-              </Card.Content>
-            </Card>
-          )}
-
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              Account Info
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Bio</Text>
+          <View style={styles.bioContainer}>
+            <Text style={styles.bioText}>
+              {userProfile?.profile.bio || "No bio yet. Add something about yourself!"}
             </Text>
-            <View style={styles.infoRow}>
-              <Text
-                variant="labelMedium"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                Email:
-              </Text>
-              <Text variant="bodyMedium">{user?.email}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Interests</Text>
+          <View style={styles.interestsContainer}>
+            {userProfile?.profile.interests?.map((interest, index) => (
+              <InterestChip key={index} label={interest} selected />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Discovery Settings</Text>
+          <TouchableOpacity style={styles.settingsItem}>
+            <View style={styles.settingsLabel}>
+              <Ionicons name="location-outline" size={24} color={COLORS.textSecondary} />
+              <Text style={styles.settingsText}>Location</Text>
             </View>
-          </Card.Content>
-        </Card>
+            <View style={styles.settingsValue}>
+              <Text style={styles.valueText}>{userProfile?.profile.location?.city || "Set location"}</Text>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.border} />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingsItem}>
+            <View style={styles.settingsLabel}>
+              <Ionicons name="options-outline" size={24} color={COLORS.textSecondary} />
+              <Text style={styles.settingsText}>Preferences</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.border} />
+          </TouchableOpacity>
+        </View>
 
         <Button
-          mode="contained"
-          onPress={showDialog}
-          buttonColor={theme.colors.errorContainer}
-          textColor={theme.colors.onErrorContainer}
+          title="Sign Out"
+          onPress={() => setShowSignOutDialog(true)}
+          variant="primary"
           style={styles.signOutButton}
-        >
-          Sign Out
-        </Button>
+        />
       </ScrollView>
 
       <Portal>
-        <Dialog visible={visible} onDismiss={hideDialog}>
+        <Dialog visible={showSignOutDialog} onDismiss={() => setShowSignOutDialog(false)}>
           <Dialog.Title>Sign Out</Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyMedium">Are you sure you want to sign out?</Text>
+            <Text style={styles.dialogText}>Are you sure you want to sign out?</Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={hideDialog}>Cancel</Button>
-            <Button onPress={handleSignOut} textColor={theme.colors.error}>
-              Sign Out
-            </Button>
+            <TouchableOpacity onPress={() => setShowSignOutDialog(false)} style={styles.dialogButton}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSignOut} style={styles.dialogButton}>
+              <Text style={styles.signOutConfirmText}>Sign Out</Text>
+            </TouchableOpacity>
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </Surface>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   centerContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    backgroundColor: COLORS.background,
   },
   content: {
-    padding: 16,
+    paddingBottom: SPACING.xxl,
   },
-  title: {
-    fontWeight: "600",
+  editButton: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.primary,
+    fontWeight: "bold",
+    marginRight: SPACING.md,
   },
-  photosContainer: {
-    marginBottom: 16,
-  },
-  photo: {
-    width: 120,
-    height: 160,
-    borderRadius: 12,
-    marginRight: 12,
-  },
-  card: {
-    marginBottom: 16,
-  },
-  nameRow: {
-    flexDirection: "row",
+  photoSection: {
     alignItems: "center",
-    gap: 12,
-    marginBottom: 8,
+    paddingVertical: SPACING.xl,
   },
-  name: {
-    fontWeight: "600",
+  avatarBorder: {
+    padding: 4,
+    borderRadius: 75,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    position: 'relative',
+  },
+  mainAvatar: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+  },
+  editIconContainer: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: COLORS.primary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: COLORS.background,
+  },
+  nameText: {
+    ...TYPOGRAPHY.title,
+    marginTop: SPACING.md,
+  },
+  photoGridSection: {
+    paddingHorizontal: SPACING.md,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
   },
   sectionTitle: {
-    fontWeight: "600",
-    marginBottom: 4,
+    ...TYPOGRAPHY.heading,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  progressText: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.textSecondary,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
+  },
+  gridPhoto: {
+    width: PHOTO_SIZE,
+    height: PHOTO_SIZE,
+    borderRadius: BORDER_RADIUS.medium,
+  },
+  emptyPhotoSlot: {
+    width: PHOTO_SIZE,
+    height: PHOTO_SIZE,
+    borderRadius: BORDER_RADIUS.medium,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: SPACING.lg,
+  },
+  section: {
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  bioContainer: {
+    marginTop: SPACING.sm,
+    padding: SPACING.md,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.medium,
+  },
+  bioText: {
+    ...TYPOGRAPHY.body,
+    lineHeight: 22,
   },
   interestsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: SPACING.sm,
   },
-  infoRow: {
-    marginTop: 8,
+  settingsItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  settingsLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  settingsText: {
+    ...TYPOGRAPHY.body,
+  },
+  settingsValue: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
   },
+  valueText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+  },
   signOutButton: {
-    marginTop: 16,
-    marginBottom: 32,
+    marginHorizontal: SPACING.md,
+    marginTop: SPACING.xl,
+    backgroundColor: COLORS.error,
+  },
+  dialogText: {
+    ...TYPOGRAPHY.body,
+  },
+  dialogButton: {
+    padding: SPACING.sm,
+    marginLeft: SPACING.md,
+  },
+  cancelText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+  },
+  signOutConfirmText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.error,
+    fontWeight: 'bold',
   },
 });

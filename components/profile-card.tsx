@@ -1,133 +1,137 @@
-import React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
-import { Card, Text, IconButton, useTheme } from "react-native-paper";
-import { PhotoCarousel } from "./photo-carousel";
-import { InterestTag } from "./interest-tag";
-import { UserProfile } from "../models/user";
+import React from 'react';
+import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { Text } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { PhotoCarousel } from './photo-carousel';
+import { InterestChip } from './interest-chip';
+import { UserProfile } from '../models/user';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../constants/theme';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const CARD_HEIGHT = SCREEN_HEIGHT * 0.7;
 
 interface ProfileCardProps {
   profile: UserProfile & { distance: number };
-  onLike: () => void;
-  onPass: () => void;
-  onSuperLike: () => void;
+  onViewFull?: () => void;
 }
 
-export function ProfileCard({
-  profile,
-  onLike,
-  onPass,
-  onSuperLike,
-}: ProfileCardProps) {
-  const theme = useTheme();
-
+export function ProfileCard({ profile, onViewFull }: ProfileCardProps) {
   return (
-    <Card style={styles.card}>
+    <View style={styles.card}>
       <PhotoCarousel
         photos={profile.profile.photos}
-        height={SCREEN_HEIGHT * 0.4}
+        height={CARD_HEIGHT}
+        width={SCREEN_WIDTH - SPACING.md * 2}
       />
 
-      <Card.Content style={styles.content}>
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.name}>
-            {profile.profile.name}, {profile.profile.age}
-          </Text>
-          <Text
-            variant="bodyMedium"
-            style={{ color: theme.colors.onSurfaceVariant }}
-          >
-            {Math.round(profile.distance)} km away
-          </Text>
-        </View>
-
-        {profile.profile.bio && (
-          <Text variant="bodyMedium" style={styles.bio} numberOfLines={3}>
-            {profile.profile.bio}
-          </Text>
-        )}
-
-        {profile.profile.interests && profile.profile.interests.length > 0 && (
-          <View style={styles.interestsContainer}>
-            {profile.profile.interests.slice(0, 6).map((interest, index) => (
-              <InterestTag key={index} interest={interest} />
-            ))}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.8)']}
+        style={styles.gradient}
+      >
+        <View style={styles.infoContainer}>
+          <View style={styles.header}>
+            <Text style={styles.name}>
+              {profile.profile.name}, {profile.profile.age}
+            </Text>
+            <View style={styles.distanceContainer}>
+              <Ionicons name="location-sharp" size={16} color={COLORS.white} />
+              <Text style={styles.distance}>
+                {Math.round(profile.distance)} km away
+              </Text>
+            </View>
           </View>
-        )}
-      </Card.Content>
 
-      <View style={styles.actionsContainer}>
-        <IconButton
-          icon="close"
-          mode="contained"
-          size={32}
-          iconColor={theme.colors.error}
-          containerColor={theme.colors.surface}
-          onPress={onPass}
-          style={styles.actionButton}
-        />
-        <IconButton
-          icon="star"
-          mode="contained"
-          size={28}
-          iconColor={theme.colors.tertiary}
-          containerColor={theme.colors.surface}
-          onPress={onSuperLike}
-          style={styles.actionButton}
-        />
-        <IconButton
-          icon="heart"
-          mode="contained"
-          size={32}
-          iconColor={theme.colors.primary}
-          containerColor={theme.colors.surface}
-          onPress={onLike}
-          style={styles.actionButton}
-        />
-      </View>
-    </Card>
+          {profile.profile.interests && (
+            <View style={styles.interestsContainer}>
+              {profile.profile.interests.slice(0, 3).map((interest, index) => (
+                <InterestChip
+                  key={index}
+                  label={interest}
+                  selected
+                  style={styles.chip}
+                />
+              ))}
+            </View>
+          )}
+
+          {profile.profile.bio && (
+            <View>
+              <Text style={styles.bio} numberOfLines={2}>
+                {profile.profile.bio}
+              </Text>
+              <TouchableOpacity onPress={onViewFull}>
+                <Text style={styles.viewFull}>View Full</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: 16,
-    borderRadius: 16,
-    overflow: "hidden",
+    width: SCREEN_WIDTH - SPACING.md * 2,
+    height: CARD_HEIGHT,
+    borderRadius: BORDER_RADIUS.large,
+    backgroundColor: COLORS.white,
+    overflow: 'hidden',
+    ...SHADOWS.large,
   },
-  content: {
-    paddingTop: 16,
+  gradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    justifyContent: 'flex-end',
+    padding: SPACING.lg,
+  },
+  infoContainer: {
+    gap: SPACING.sm,
   },
   header: {
-    marginBottom: 12,
+    gap: SPACING.xs,
   },
   name: {
-    fontWeight: "600",
-    marginBottom: 4,
+    ...TYPOGRAPHY.title,
+    color: COLORS.white,
   },
-  bio: {
-    marginBottom: 12,
-    lineHeight: 20,
+  distanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  distance: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.white,
+    opacity: 0.9,
   },
   interestsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 8,
-    marginBottom: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.xs,
   },
-  actionsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 16,
-    gap: 24,
+  chip: {
+    marginBottom: 0,
+    marginRight: 0,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'transparent',
   },
-  actionButton: {
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  bio: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.white,
+    opacity: 0.9,
+    lineHeight: 20,
+  },
+  viewFull: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.white,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+    marginTop: 4,
   },
 });

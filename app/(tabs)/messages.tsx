@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, FlatList } from "react-native";
-import {
-  Text,
-  Surface,
-  useTheme,
-  ActivityIndicator,
-  Searchbar,
-  Divider,
-} from "react-native-paper";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, StyleSheet, FlatList, TextInput } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useAuth } from "../../contexts/auth-context";
 import { useRouter } from "expo-router";
 import { MessagePreview } from "../../components/message-preview";
+import { EmptyState } from "../../components/empty-state";
 import { getMatches, Match } from "../../services/matches";
 import { getConversations, Conversation } from "../../services/messages";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "../../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 interface ConversationWithMatch extends Conversation {
   match: Match;
@@ -20,72 +16,53 @@ interface ConversationWithMatch extends Conversation {
 
 export default function MessagesScreen() {
   const { user } = useAuth();
-  const theme = useTheme();
   const router = useRouter();
-  const [conversations, setConversations] = useState<ConversationWithMatch[]>(
-    [],
-  );
-  const [filteredConversations, setFilteredConversations] = useState<
-    ConversationWithMatch[]
-  >([]);
+  const [conversations, setConversations] = useState<ConversationWithMatch[]>([]);
+  const [filteredConversations, setFilteredConversations] = useState<ConversationWithMatch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    loadConversations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredConversations(conversations);
-    } else {
-      const filtered = conversations.filter((conv) =>
-        conv.match.otherUser?.profile.name
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
-      );
-      setFilteredConversations(filtered);
-    }
-  }, [searchQuery, conversations]);
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (!user?.uid) return;
 
     try {
       setLoading(true);
-      setError(null);
 
-      // Get all matches
       const matches = await getMatches(user.uid);
       const matchIds = matches.map((m) => m.id);
-
-      // Get conversation data for each match
       const conversationData = await getConversations(user.uid, matchIds);
 
-      // Combine match data with conversation data
       const combined: ConversationWithMatch[] = conversationData.map((conv) => {
         const match = matches.find((m) => m.id === conv.matchId)!;
-        return {
-          ...conv,
-          match,
-        };
+        return { ...conv, match };
       });
 
       setConversations(combined);
       setFilteredConversations(combined);
     } catch (err) {
       console.error("Error loading conversations:", err);
-      setError("Failed to load conversations. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.uid]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredConversations(conversations);
+    } else {
+      const filtered = conversations.filter((conv) =>
+        conv.match.otherUser?.profile.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredConversations(filtered);
+    }
+  }, [searchQuery, conversations]);
 
   const formatTimestamp = (timestamp: any): string => {
     if (!timestamp) return "";
-
     const now = new Date();
     const messageDate = timestamp.toDate();
     const diffMs = now.getTime() - messageDate.getTime();
@@ -110,119 +87,97 @@ export default function MessagesScreen() {
     router.push(`/chat/${matchId}` as any);
   };
 
-  if (loading) {
+  if (loading && conversations.length === 0) {
     return (
-      <Surface
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" />
-          <Text
-            variant="bodyLarge"
-            style={{ marginTop: 16, color: theme.colors.onSurfaceVariant }}
-          >
-            Loading conversations...
-          </Text>
-        </View>
-      </Surface>
-    );
-  }
-
-  if (error) {
-    return (
-      <Surface
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.centerContent}>
-          <Text
-            variant="headlineSmall"
-            style={{ color: theme.colors.error, marginBottom: 16 }}
-          >
-            {error}
-          </Text>
-        </View>
-      </Surface>
-    );
-  }
-
-  if (conversations.length === 0) {
-    return (
-      <Surface
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.centerContent}>
-          <Text
-            variant="headlineSmall"
-            style={{ textAlign: "center", marginBottom: 16 }}
-          >
-            No conversations yet
-          </Text>
-          <Text
-            variant="bodyLarge"
-            style={{
-              color: theme.colors.onSurfaceVariant,
-              textAlign: "center",
-            }}
-          >
-            Start chatting with your matches!
-          </Text>
-        </View>
-      </Surface>
+      <View style={styles.centerContent}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
     );
   }
 
   return (
-    <Surface
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <View style={styles.searchContainer}>
-        <Searchbar
-          placeholder="Search conversations"
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchBar}
-        />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color={COLORS.textSecondary} style={styles.searchIcon} />
+          <TextInput
+            placeholder="Search messages"
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor={COLORS.textSecondary}
+          />
+        </View>
       </View>
+
       <FlatList
         data={filteredConversations}
         keyExtractor={(item) => item.matchId}
         renderItem={({ item }) => {
           if (!item.match.otherUser) return null;
-          console.info("[MESSAGE ITEM]", item);
           return (
             <MessagePreview
               user={item.match.otherUser}
               lastMessage={item.lastMessage?.text}
               timestamp={formatTimestamp(item.lastMessage?.timestamp)}
               unreadCount={item.unreadCount}
+              isSentByMe={item.lastMessage?.senderId === user?.uid}
               onPress={() => handleConversationPress(item.matchId)}
             />
           );
         }}
-        ItemSeparatorComponent={() => <Divider />}
+        ItemSeparatorComponent={() => <View style={styles.divider} />}
         contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <EmptyState
+            icon="chatbubble-outline"
+            title={searchQuery ? "No messages found" : "No conversations yet"}
+            description={searchQuery ? "Try searching for someone else" : "Start chatting with your matches!"}
+          />
+        }
       />
-    </Surface>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   centerContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    padding: SPACING.md,
+    backgroundColor: COLORS.background,
   },
   searchContainer: {
-    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.full,
+    paddingHorizontal: SPACING.md,
+    height: 48,
   },
-  searchBar: {
-    elevation: 0,
+  searchIcon: {
+    marginRight: SPACING.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...TYPOGRAPHY.body,
+    color: COLORS.text,
   },
   listContent: {
-    paddingBottom: 16,
+    paddingBottom: SPACING.xl,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginHorizontal: SPACING.md,
+    opacity: 0.5,
   },
 });
