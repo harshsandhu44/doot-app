@@ -188,6 +188,7 @@ export default function MessagesScreen() {
         keyExtractor={(item) => item.matchId}
         renderItem={({ item }) => {
           if (!item.match.otherUser) return null;
+          console.info("[MESSAGE ITEM]", item);
           return (
             <MessagePreview
               user={item.match.otherUser}

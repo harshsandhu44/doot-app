@@ -34,7 +34,7 @@ export default function TabsLayout() {
           title: "Swipe",
           headerTitle: "Discover",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <Ionicons name="search" size={size} color={color} />
           ),
         }}
       />

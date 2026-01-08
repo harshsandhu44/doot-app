@@ -21,7 +21,11 @@ export function MessagePreview({
   const theme = useTheme();
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <List.Item
         title={user.profile.name}
         description={lastMessage}
@@ -77,6 +81,9 @@ export function MessagePreview({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 8,
+  },
   item: {
     paddingVertical: 8,
   },
