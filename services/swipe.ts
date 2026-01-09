@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { UserProfile } from "../models/user";
+import { sendMatchNotification } from "./push-notifications";
 
 export interface SwipeAction {
   userId: string;
@@ -187,6 +188,17 @@ export async function recordSwipe(
     ) {
       // Create a match
       const matchId = await createMatch(userId, targetUserId);
+      
+      // Send push notifications to both users
+      try {
+        await Promise.all([
+          sendMatchNotification(userId, targetUserId),
+          sendMatchNotification(targetUserId, userId),
+        ]);
+      } catch (error) {
+        console.error("Error sending match notifications:", error);
+      }
+      
       return { matched: true, matchId };
     }
 

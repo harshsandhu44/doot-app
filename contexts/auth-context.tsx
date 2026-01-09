@@ -20,6 +20,12 @@ import * as WebBrowser from "expo-web-browser";
 import { auth } from "../config/firebase";
 import { User } from "../models/user";
 import { Platform } from "react-native";
+import {
+  registerForPushNotifications,
+  savePushToken,
+  removePushToken,
+  setupNotificationListeners,
+} from "../services/notifications";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -61,7 +67,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser: FirebaseUser | null) => {
+      async (firebaseUser: FirebaseUser | null) => {
         if (firebaseUser) {
           const user: User = {
             uid: firebaseUser.uid,
@@ -72,6 +78,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
             createdAt: firebaseUser.metadata.creationTime,
           };
           setUser(user);
+
+          // Register for push notifications
+          try {
+            const pushToken = await registerForPushNotifications();
+            if (pushToken) {
+              await savePushToken(firebaseUser.uid, pushToken);
+            }
+          } catch (error) {
+            console.error("Error registering push notifications:", error);
+          }
         } else {
           setUser(null);
         }
@@ -80,6 +96,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     );
 
     return unsubscribe;
+  }, []);
+
+  // Setup notification listeners
+  useEffect(() => {
+    const cleanup = setupNotificationListeners(
+      (notification) => {
+        console.log("Foreground notification:", notification);
+      },
+      (response) => {
+        console.log("Notification tapped:", response);
+        // Handle notification tap - navigate to appropriate screen
+        const data = response.notification.request.content.data;
+        if (data?.type === "match") {
+          // Navigate to matches screen
+          console.log("Navigate to match:", data.matchId);
+        } else if (data?.type === "message") {
+          // Navigate to chat screen
+          console.log("Navigate to chat:", data.matchId);
+        }
+      },
+    );
+
+    return cleanup;
   }, []);
 
   // Handle Google Sign-In response
@@ -124,6 +163,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setError(null);
       setLoading(true);
+      
+      // Remove push token before signing out
+      if (user) {
+        try {
+          await removePushToken(user.uid);
+        } catch (error) {
+          console.error("Error removing push token:", error);
+        }
+      }
+      
       await firebaseSignOut(auth);
     } catch (err: any) {
       setError(err.message || "Failed to sign out");

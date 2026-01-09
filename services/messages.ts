@@ -12,6 +12,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { sendMessageNotification } from "./push-notifications";
 
 export interface Message {
   id: string;
@@ -57,6 +58,13 @@ export async function sendMessage(
         timestamp: messageData.timestamp,
       },
     });
+
+    // Send push notification to receiver
+    try {
+      await sendMessageNotification(receiverId, senderId, matchId, text);
+    } catch (error) {
+      console.error("Error sending message notification:", error);
+    }
 
     return {
       id: docRef.id,
